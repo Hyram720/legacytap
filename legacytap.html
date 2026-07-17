@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>LegacyTap — Video Follow-Ups for Final Expense Agents</title>
+<style>
+  :root{
+    --bg:#0b1020; --bg2:#0f1730; --panel:#131c38; --panel2:#182347;
+    --line:#243057; --line2:#2f3c69;
+    --txt:#eaf0ff; --mut:#98a6d3; --mut2:#6f7fb0;
+    --brand:#2f6dff; --brand2:#5b8bff; --accent:#12c8a5;
+    --hot:#ff5a5f; --warm:#ffb020; --cold:#5b8bff;
+    --good:#22c55e; --shadow:0 10px 30px rgba(0,0,0,.35);
+    --r:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Helvetica,Arial,sans-serif;
+    background:radial-gradient(1200px 600px at 80% -10%,#16224a 0%,var(--bg) 55%);
+    color:var(--txt);min-height:100vh;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  input,select,textarea{font-family:inherit}
+  .app{display:grid;grid-template-columns:248px 1fr;min-height:100vh}
+  /* Sidebar */
+  .side{background:linear-gradient(180deg,var(--bg2),#0b1226);border-right:1px solid var(--line);
+    padding:20px 14px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh}
+  .brand{display:flex;align-items:center;gap:10px;padding:6px 8px 18px}
+  .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--brand),var(--accent));
+    display:grid;place-items:center;font-weight:800;color:#fff;box-shadow:0 6px 18px rgba(47,109,255,.45)}
+  .brand h1{font-size:17px;margin:0;letter-spacing:.2px}
+  .brand small{display:block;color:var(--mut2);font-size:10.5px;font-weight:600;letter-spacing:.4px;text-transform:uppercase}
+  .nav{display:flex;flex-direction:column;gap:3px;margin-top:6px}
+  .nav button{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:var(--mut);
+    font-size:14px;font-weight:600;text-align:left;transition:.15s;width:100%}
+  .nav button:hover{background:var(--panel);color:var(--txt)}
+  .nav button.active{background:linear-gradient(90deg,rgba(47,109,255,.22),rgba(47,109,255,.05));color:#fff;
+    box-shadow:inset 0 0 0 1px var(--line2)}
+  .nav .ic{width:18px;text-align:center;font-size:15px}
+  .side .up{margin-top:auto;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px}
+  .side .up b{font-size:13px}
+  .side .up p{margin:4px 0 10px;color:var(--mut);font-size:12px;line-height:1.4}
+  .side .up button{width:100%;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;
+    padding:9px;border-radius:9px;font-weight:700;font-size:13px}
+  /* Main */
+  .main{padding:26px 30px 60px;max-width:1180px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;gap:16px}
+  .topbar .title h2{margin:0;font-size:23px;letter-spacing:.2px}
+  .topbar .title p{margin:4px 0 0;color:var(--mut);font-size:13.5px}
+  .btn{background:var(--panel2);border:1px solid var(--line2);color:var(--txt);padding:10px 15px;border-radius:10px;
+    font-weight:650;font-size:13.5px;display:inline-flex;align-items:center;gap:8px;transition:.15s}
+  .btn:hover{border-color:var(--brand2);background:#1c2a55}
+  .btn.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));border:none;box-shadow:0 8px 22px rgba(47,109,255,.35)}
+  .btn.primary:hover{filter:brightness(1.07)}
+  .btn.ghost{background:transparent}
+  .btn.sm{padding:7px 11px;font-size:12.5px;border-radius:8px}
+  .btn.danger:hover{border-color:var(--hot);color:#ffd7d8}
+  /* Cards & grid */
+  .grid{display:grid;gap:16px}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  .card{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:var(--r);
+    padding:18px;box-shadow:var(--shadow)}
+  .stat{position:relative;overflow:hidden}
+  .stat .lab{color:var(--mut);font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:7px}
+  .stat .val{font-size:30px;font-weight:800;margin-top:8px;letter-spacing:.5px}
+  .stat .delta{font-size:12px;font-weight:700;margin-top:5px}
+  .up{color:var(--good)} .down{color:var(--hot)}
+  .stat .spark{position:absolute;right:14px;bottom:12px;opacity:.85}
+  .sec-title{font-size:15px;font-weight:750;margin:26px 0 13px;display:flex;align-items:center;gap:9px}
+  .sec-title .pill{font-size:11px;color:var(--accent);background:rgba(18,200,165,.12);padding:3px 9px;border-radius:20px;font-weight:700}
+  /* Chart */
+  .chartwrap{display:flex;align-items:flex-end;gap:10px;height:150px;padding:6px 2px 0}
+  .bar{flex:1;background:linear-gradient(180deg,var(--brand2),var(--brand));border-radius:7px 7px 3px 3px;position:relative;min-height:4px;transition:.4s}
+  .bar span{position:absolute;top:-19px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--mut);font-weight:700}
+  .bar small{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--mut2)}
+  /* Lists / tables */
+  .row{display:flex;align-items:center;gap:13px;padding:12px 4px;border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:none}
+  .av{width:38px;height:38px;border-radius:10px;background:var(--panel2);display:grid;place-items:center;font-weight:800;font-size:14px;flex:none}
+  .temp{font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.4px}
+  .t-hot{background:rgba(255,90,95,.16);color:#ff8a8e} .t-warm{background:rgba(255,176,32,.16);color:#ffc861}
+  .t-cold{background:rgba(91,139,255,.16);color:#9db6ff}
+  .muted{color:var(--mut)} .mut2{color:var(--mut2)}
+  .fz12{font-size:12px} .fz13{font-size:13px} .fw7{font-weight:700}
+  .score{font-weight:800;font-size:16px}
+  .barmini{height:6px;border-radius:6px;background:var(--panel2);overflow:hidden;flex:none}
+  .barmini > i{display:block;height:100%;border-radius:6px}
+  /* Card tiles */
+  .tile{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:var(--r);overflow:hidden;transition:.18s;cursor:pointer}
+  .tile:hover{transform:translateY(-3px);border-color:var(--line2);box-shadow:0 16px 34px rgba(0,0,0,.4)}
+  .tile .thumb{aspect-ratio:16/10;background:#0a1128 center/cover;position:relative;display:grid;place-items:center}
+  .tile .thumb .play{width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.9);display:grid;place-items:center;color:#0b1020;font-size:19px;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+  .tile .thumb .badge{position:absolute;top:10px;left:10px;font-size:10.5px;font-weight:700;background:rgba(0,0,0,.55);padding:4px 9px;border-radius:20px;backdrop-filter:blur(6px)}
+  .tile .meta{padding:13px 14px}
+  .tile .meta h4{margin:0 0 4px;font-size:14.5px}
+  .tile .meta .st{display:flex;gap:14px;margin-top:9px;color:var(--mut);font-size:12px}
+  /* Modal */
+  .overlay{position:fixed;inset:0;background:rgba(4,8,20,.72);backdrop-filter:blur(4px);display:none;place-items:center;z-index:60;padding:24px}
+  .overlay.on{display:grid}
+  .modal{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line2);border-radius:18px;width:100%;max-width:720px;max-height:90vh;overflow:auto;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+  .modal .mh{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel);z-index:2}
+  .modal .mh h3{margin:0;font-size:17px}
+  .modal .mb{padding:22px}
+  .x{width:32px;height:32px;border-radius:8px;background:var(--panel2);display:grid;place-items:center;color:var(--mut);font-size:17px}
+  .x:hover{color:#fff;background:#22305c}
+  label.fl{display:block;font-size:12.5px;font-weight:700;color:var(--mut);margin:15px 0 7px}
+  .in{width:100%;background:var(--bg);border:1px solid var(--line2);border-radius:10px;padding:11px 13px;color:var(--txt);font-size:14px}
+  .in:focus{outline:none;border-color:var(--brand2)}
+  textarea.in{min-height:78px;resize:vertical}
+  .chipset{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .chip{background:var(--panel2);border:1px solid var(--line2);padding:8px 12px;border-radius:22px;font-size:12.5px;font-weight:650;display:inline-flex;gap:7px;align-items:center}
+  .chip.on{background:rgba(47,109,255,.18);border-color:var(--brand2);color:#fff}
+  .chip .rm{color:var(--mut2);font-weight:800}
+  .tmpl{border:1px solid var(--line2);border-radius:11px;padding:13px;cursor:pointer;transition:.15s}
+  .tmpl:hover{border-color:var(--brand2);background:var(--panel2)}
+  .tmpl b{font-size:13.5px} .tmpl p{margin:5px 0 0;color:var(--mut);font-size:12px;line-height:1.45}
+  /* recipient phone */
+  .phone{width:330px;margin:0 auto;background:#05070f;border-radius:34px;padding:12px;border:1px solid #223;box-shadow:0 30px 70px rgba(0,0,0,.6)}
+  .phone .screen{background:#0a0f1f;border-radius:24px;overflow:hidden}
+  .pvid{aspect-ratio:9/13;background:#0a1128 center/cover;position:relative;display:grid;place-items:center}
+  .pvid .play{width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.92);display:grid;place-items:center;color:#0b1020;font-size:22px}
+  .pvid .agent{position:absolute;bottom:12px;left:12px;display:flex;align-items:center;gap:9px}
+  .pvid .agent .av{width:34px;height:34px}
+  .pbody{padding:16px}
+  .pbody h3{margin:0 0 4px;font-size:16px}
+  .pbtns{display:grid;gap:9px;margin-top:14px}
+  .pbtn{background:var(--panel2);border:1px solid var(--line2);border-radius:11px;padding:12px;font-weight:700;font-size:13.5px;display:flex;align-items:center;gap:10px;justify-content:center}
+  .pbtn.main{background:linear-gradient(135deg,var(--brand),var(--brand2));border:none}
+  /* automation flow */
+  .flow{display:flex;flex-direction:column;gap:0}
+  .step{display:flex;gap:14px}
+  .step .rail{display:flex;flex-direction:column;align-items:center;flex:none}
+  .step .dot{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:15px;flex:none;
+    background:var(--panel2);border:1px solid var(--line2)}
+  .step .dot.trig{background:linear-gradient(135deg,var(--brand),var(--brand2));border:none}
+  .step .dot.act{background:rgba(18,200,165,.15);border-color:var(--accent);color:var(--accent)}
+  .step .dot.wait{background:rgba(255,176,32,.13);border-color:var(--warm);color:var(--warm)}
+  .step .line{width:2px;flex:1;background:var(--line2);min-height:16px;margin:3px 0}
+  .step .body{padding:2px 0 20px;flex:1}
+  .step .body b{font-size:13.5px}
+  .step .body p{margin:4px 0 0;color:var(--mut);font-size:12.5px;line-height:1.5}
+  .step .body .tag{display:inline-block;font-size:10.5px;font-weight:700;color:var(--mut2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+  .toggle{width:42px;height:24px;border-radius:20px;background:var(--panel2);border:1px solid var(--line2);position:relative;flex:none;transition:.2s}
+  .toggle.on{background:var(--brand)}
+  .toggle i{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
+  .toggle.on i{left:20px}
+  /* automation engine ui */
+  .clockbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line2);border-radius:14px;padding:13px 16px;margin-bottom:20px}
+  .clockbar .daybig{font-size:15px;font-weight:800}
+  .clockbar .sub{color:var(--mut2);font-size:12px}
+  .clockbar .spacer{flex:1}
+  .seqcard-head{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+  .enrollstrip{display:flex;flex-wrap:wrap;gap:7px;margin:2px 0 16px}
+  .epill{display:inline-flex;align-items:center;gap:7px;background:var(--panel2);border:1px solid var(--line2);border-radius:20px;padding:5px 11px 5px 5px;font-size:12px;font-weight:650}
+  .epill .av{width:22px;height:22px;font-size:10px}
+  .epill .nx{color:var(--mut2);font-size:11px}
+  .abanner{background:rgba(47,109,255,.1);border:1px solid var(--brand2);border-radius:12px;padding:13px 15px;margin:6px 0 14px}
+  .abanner .prog{display:flex;gap:5px;margin-top:10px}
+  .abanner .prog i{height:6px;flex:1;border-radius:3px;background:var(--line2)}
+  .abanner .prog i.done{background:var(--accent)}
+  .aban .aban i.now{background:var(--brand)}
+  .stepedit{display:flex;gap:10px;align-items:flex-start;background:var(--bg);border:1px solid var(--line2);border-radius:11px;padding:11px;margin-bottom:9px}
+  .stepedit .kind{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-size:14px;flex:none;background:var(--panel2);border:1px solid var(--line2)}
+  .stepedit .kind.act{background:rgba(18,200,165,.15);border-color:var(--accent);color:var(--accent)}
+  .stepedit .kind.wait{background:rgba(255,176,32,.13);border-color:var(--warm);color:var(--warm)}
+  .stepedit .kind.trig{background:linear-gradient(135deg,var(--brand),var(--brand2));border:none;color:#fff}
+  .stepedit .grow{flex:1;min-width:0}
+  .stepedit .mv{display:flex;flex-direction:column;gap:3px}
+  .minibtn{width:26px;height:22px;border-radius:6px;background:var(--panel2);border:1px solid var(--line2);color:var(--mut);font-size:12px;display:grid;place-items:center;cursor:pointer}
+  .minibtn:hover{color:#fff;border-color:var(--brand2)}
+  .in.sm{padding:8px 10px;font-size:13px}
+  .row2{display:grid;grid-template-columns:120px 1fr;gap:8px;margin-top:7px}
+  .addrow{display:flex;gap:9px;margin:4px 0 2px}
+  .addrow button{flex:1;justify-content:center}
+  .logtbl{width:100%;border-collapse:collapse;font-size:12.5px}
+  .logtbl th{text-align:left;color:var(--mut2);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;border-bottom:1px solid var(--line2)}
+  .logtbl td{padding:9px 10px;border-bottom:1px solid var(--line)}
+  .logtbl tr:last-child td{border:none}
+  .stat-sent{color:var(--accent);font-weight:700}
+  .stat-rep{color:var(--hot);font-weight:700}
+  .empty{text-align:center;padding:50px 20px;color:var(--mut)}
+  .empty .big{font-size:40px;margin-bottom:10px}
+  .tl{position:relative;padding-left:22px}
+  .tl::before{content:"";position:absolute;left:6px;top:4px;bottom:4px;width:2px;background:var(--line2)}
+  .tl .ev{position:relative;padding:0 0 16px 4px}
+  .tl .ev::before{content:"";position:absolute;left:-19px;top:4px;width:10px;height:10px;border-radius:50%;background:var(--brand2);box-shadow:0 0 0 3px var(--bg2)}
+  .tl .ev.hot::before{background:var(--hot)}
+  .tl .ev b{font-size:13px} .tl .ev span{color:var(--mut2);font-size:11.5px}
+  .badge2{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--panel2);border:1px solid var(--line2)}
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--panel2);border:1px solid var(--accent);
+    padding:13px 17px;border-radius:12px;box-shadow:var(--shadow);z-index:90;display:flex;gap:11px;align-items:center;
+    transform:translateY(120px);transition:.35s;max-width:340px}
+  .toast.on{transform:translateY(0)}
+  .toast .ic{font-size:18px}
+  .split{display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start}
+  .kv{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .kv:last-child{border:none}
+  .seg{display:inline-flex;background:var(--panel2);border:1px solid var(--line2);border-radius:10px;padding:3px}
+  .seg button{padding:7px 13px;border-radius:7px;font-size:12.5px;font-weight:650;color:var(--mut)}
+  .seg button.on{background:var(--brand);color:#fff}
+  .prog-ring{--p:0}
+  .fade{animation:fadein .28s ease}
+  @keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .recwrap video{width:100%;max-height:260px;border-radius:12px;background:#000;display:block;object-fit:cover}
+  @media(max-width:980px){
+    .app{grid-template-columns:1fr}
+    .side{position:sticky;top:0;height:auto;flex-direction:row;align-items:center;gap:8px;padding:10px 12px;z-index:50;overflow-x:auto;border-right:none;border-bottom:1px solid var(--line)}
+    .brand{padding:0 6px 0 0}
+    .brand h1{font-size:14px}
+    .brand small{display:none}
+    .nav{flex-direction:row;margin-top:0;gap:4px}
+    .nav button{padding:8px 10px;font-size:12.5px;white-space:nowrap}
+    .nav .ic{display:none}
+    .side .up{display:none}
+    .main{padding:18px 14px 60px}
+    .g4{grid-template-columns:repeat(2,1fr)}
+    .g3,.g2,.split{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <div class="logo">L</div>
+      <div><h1>LegacyTap</h1><small>Final Expense Edition</small></div>
+    </div>
+    <nav class="nav" id="nav">
+      <button data-view="dash" class="active"><span class="ic">◧</span> Dashboard</button>
+      <button data-view="cards"><span class="ic">▶</span> Video Cards</button>
+      <button data-view="leads"><span class="ic">◆</span> Leads &amp; Scoring</button>
+      <button data-view="auto"><span class="ic">⚡</span> Automations</button>
+      <button data-view="analytics"><span class="ic">▤</span> Analytics</button>
+    </nav>
+    <div class="up">
+      <b>You're on Free Trial</b>
+      <p>4 days left. Unlock unlimited cards, AI scripts &amp; team seats.</p>
+      <button onclick="toast('Upgrade flow — wire to Stripe next 🚀')">Upgrade to Pro</button>
+    </div>
+  </aside>
+  <main class="main" id="main"></main>
+</div>
+<div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"><span class="ic">✅</span><span id="toastmsg"></span></div>
+<script>
+/* ============ STATE ============ */
+const KEY='legacytap_v2';
+const AGENT={name:'Fred Sun', agency:'Sun Marketing LLC', phone:'(856) 555-0142', avatar:'FS'};
+function seed(){
+  const base={
+    contacts:[
+      {id:'c1',name:'Dorothy Alvarez',age:68,city:'Camden, NJ',phone:'(856) 555-2210',score:92,temp:'hot',source:'Facebook Lead',watched:3,replays:2,watchPct:96,clicks:2,lastAct:'Requested a quote',lastMin:14,tags:['Beneficiary set','Budget $40/mo'],
+        events:[{t:'Requested Quote',m:14,hot:true},{t:'Tapped "Book a Call"',m:16},{t:'Re-watched video (2x)',m:22},{t:'Watched 96% of card',m:38},{t:'Opened card',m:41},{t:'Card delivered by SMS',m:60}]},
+      {id:'c2',name:'Willie Jefferson',age:72,city:'Pennsauken, NJ',phone:'(856) 555-8841',score:78,temp:'hot',source:'Direct Mail',watched:2,replays:1,watchPct:88,clicks:1,lastAct:'Tapped Save Contact',lastMin:52,tags:['Spouse involved'],
+        events:[{t:'Tapped "Save Contact"',m:52,hot:true},{t:'Watched 88%',m:58},{t:'Opened card',m:63},{t:'Card sent',m:120}]},
+      {id:'c3',name:'Gloria Nguyen',age:66,city:'Woodbury, NJ',phone:'(856) 555-3092',score:64,temp:'warm',source:'Referral',watched:1,replays:0,watchPct:71,clicks:0,lastAct:'Watched 71%',lastMin:180,tags:['Referral — Alvarez'],
+        events:[{t:'Watched 71%',m:180},{t:'Opened card',m:185},{t:'Card sent',m:240}]},
+      {id:'c4',name:'Samuel Brooks',age:70,city:'Sicklerville, NJ',phone:'(856) 555-1177',score:41,temp:'warm',source:'Facebook Lead',watched:1,replays:0,watchPct:44,clicks:0,lastAct:'Dropped off at 44%',lastMin:1440,tags:['Price sensitive'],
+        events:[{t:'Dropped off at 44%',m:1440},{t:'Opened card',m:1450},{t:'Card sent',m:1500}]},
+      {id:'c5',name:'Ruth Callahan',age:74,city:'Gloucester City, NJ',phone:'(856) 555-6620',score:18,temp:'cold',source:'Cold List',watched:0,replays:0,watchPct:0,clicks:0,lastAct:'Not opened yet',lastMin:2880,tags:['No response'],
+        events:[{t:'Card sent',m:2880}]},
+      {id:'c6',name:'Henry Okafor',age:69,city:'Camden, NJ',phone:'(856) 555-4409',score:85,temp:'hot',source:'Referral',watched:4,replays:3,watchPct:100,clicks:3,lastAct:'Booked a call',lastMin:6,tags:['Booked Thu 2pm','Ready to sign'],
+        events:[{t:'Booked a call — Thu 2pm',m:6,hot:true},{t:'Tapped "Book a Call"',m:9},{t:'Re-watched (3x)',m:20},{t:'Watched 100%',m:33},{t:'Opened card',m:40},{t:'Card sent',m:75}]}
+    ],
+    cards:[
+      {id:'k1',title:'Quick follow-up for Dorothy',template:'After the quote call',views:1284,uniq:642,clicks:412,watchPct:78,hot:37,created:'2 days ago',buttons:['Book a Call','Request Quote','Save Contact'],color:'#1b2f6b'},
+      {id:'k2',title:'Final Expense — what it covers',template:'Cold lead intro',views:820,uniq:501,clicks:188,watchPct:61,hot:14,created:'5 days ago',buttons:['Book a Call','Visit Site','Save Contact'],color:'#12463c'},
+      {id:'k3',title:'Locking your rate before your birthday',template:'Rate lock urgency',views:640,uniq:390,clicks:210,watchPct:83,hot:22,created:'1 week ago',buttons:['Book a Call','Request Quote'],color:'#4a2a5e'},
+      {id:'k4',title:'Mortgage Protection for the Ramirez home',template:'Mortgage Protection · New homeowner',views:512,uniq:318,clicks:176,watchPct:80,hot:19,created:'3 days ago',buttons:['Book a Call','Request Quote','Save Contact'],color:'#1f4d3a'}
+    ],
+    autos:[
+      {id:'a1',name:'New Lead — 5-Touch Nurture',active:true,enrolled:38,reply:'31%',
+       steps:[
+         {type:'trig',title:'Trigger: New lead added',desc:'Fires the moment a lead is imported from Facebook, direct mail, or added by hand.'},
+         {type:'act',title:'Day 0 — Send video card by SMS',desc:'"Final Expense — what it covers" card sent instantly with a personal opener.'},
+         {type:'wait',title:'Wait 2 days — if not watched',desc:'Branch: lead has not opened the card.'},
+         {type:'act',title:'Day 2 — Friendly reminder text',desc:'"Hi {first}, just want to make sure my quick video reached you — 90 seconds, no pressure."'},
+         {type:'wait',title:'Wait — if watched ≥ 70%',desc:'Branch: lead is warming up.'},
+         {type:'act',title:'Hot-lead alert to you + "Book a Call" nudge',desc:'You get a TapAlert; lead gets a card with a one-tap booking button.'}
+       ]},
+      {id:'a2',name:'Watched but No Booking',active:true,enrolled:19,reply:'44%',
+       steps:[
+         {type:'trig',title:'Trigger: Watched ≥ 80% but no call booked',desc:'High intent, no next step taken yet.'},
+         {type:'act',title:'Same-day — personal voice-style text',desc:'"Saw you watched the whole thing 🙌 want me to run your exact rate? Takes 4 minutes."'},
+         {type:'wait',title:'Wait 1 day',desc:''},
+         {type:'act',title:'Day 1 — Rate-lock urgency card',desc:'"Locking your rate before your birthday" — birthday-based price increase angle.'}
+       ]},
+      {id:'a4',name:'Mortgage Protection — New Homeowner',active:true,enrolled:24,reply:'38%',
+       steps:[
+         {type:'trig',title:'Trigger: New mortgage / homeowner lead added',desc:'Fires when a new-homeowner or lender-list lead is imported.'},
+         {type:'act',title:'Day 0 — Send "Protecting your home" card',desc:'Congratulate on the home + 60-second explainer of mortgage protection tied to their loan.'},
+         {type:'wait',title:'Wait 2 days — if not watched',desc:'Branch: lead has not opened the card.'},
+         {type:'act',title:'Day 2 — "Plain-English lender letter" card',desc:'Reframe the scary lender notice — what\'s real, what to ignore, what it actually costs.'},
+         {type:'wait',title:'Wait — if watched ≥ 70%',desc:'Branch: high intent.'},
+         {type:'act',title:'Hot-lead alert + return-of-premium card',desc:'You get a TapAlert; lead gets the "money back if unused" angle with one-tap booking.'}
+       ]},
+      {id:'a3',name:'Cold Re-Engage (30 days)',active:false,enrolled:0,reply:'—',
+       steps:[
+         {type:'trig',title:'Trigger: No open after 7 days',desc:'Lead went cold.'},
+         {type:'act',title:'Switch channel — try email + new hook',desc:'Different subject line, shorter video, testimonial-led.'}
+       ]}
+    ],
+    weekly:[210,340,290,480,520,610,640],
+    settings:{compliance:true},
+    simDay:0,
+    outbox:[],
+    seededEnroll:false
+  };
+  /* ===== ZERO START: strip all fabricated demo activity so every number reflects reality ===== */
+  base.cards.forEach(c=>{c.views=0;c.uniq=0;c.clicks=0;c.watchPct=0;c.hot=0;c.created='Not sent yet';});
+  base.contacts.forEach(c=>{c.score=0;c.temp='cold';c.watched=0;c.replays=0;c.watchPct=0;c.clicks=0;c.lastAct='Added — not contacted';c.lastMin=1;c.tags=[];c.events=[{t:'Lead added',day:0,min:2}];c.auto=null;c.doneSeqs=[];});
+  base.weekly=[0,0,0,0,0,0,0];
+  base.autos.forEach(a=>{a.active=false;a.enrolled=0;a.sent=0;a.replies=0;});
+  base.outbox=[];base.simDay=0;base.seededEnroll=true;
+  return base;
+}
+let S=load();
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY));if(d&&d.contacts){d.simDay=d.simDay||0;d.outbox=d.outbox||[];if(d.seededEnroll===undefined)d.seededEnroll=false;return d;}return seed();}catch(e){return seed();}}
+function save(){localStorage.setItem(KEY,JSON.stringify(S));}
+function reset(){if(confirm('Reset all demo data back to the seeded example?')){S=seed();save();render();toast('Demo data reset');}}
+/* ============ HELPERS ============ */
+const $=s=>document.querySelector(s);
+const el=(h)=>{const d=document.createElement('div');d.innerHTML=h.trim();return d.firstChild;};
+function tempClass(t){return t==='hot'?'t-hot':t==='warm'?'t-warm':'t-cold';}
+function tempColor(t){return t==='hot'?'var(--hot)':t==='warm'?'var(--warm)':'var(--cold)';}
+function ago(min){if(min<60)return min+'m ago';if(min<1440)return Math.round(min/60)+'h ago';return Math.round(min/1440)+'d ago';}
+function initials(n){return n.split(' ').map(x=>x[0]).slice(0,2).join('').toUpperCase();}
+function sum(a){return a.reduce((x,y)=>x+y,0);}
+let toastT;
+function toast(msg,ic){$('#toastmsg').textContent=msg;$('#toast').querySelector('.ic').textContent=ic||'✅';
+  $('#toast').classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>$('#toast').classList.remove('on'),3200);}
+/* ============ ROUTER ============ */
+let view='dash';
+function render(){
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
+  const m=$('#main');
+  if(view==='dash')m.innerHTML=vDash();
+  else if(view==='cards')m.innerHTML=vCards();
+  else if(view==='leads')m.innerHTML=vLeads();
+  else if(view==='auto')m.innerHTML=vAuto();
+  else if(view==='analytics')m.innerHTML=vAnalytics();
+  m.classList.remove('fade');void m.offsetWidth;m.classList.add('fade');
+  m.scrollTop=0;window.scrollTo(0,0);
+}
+document.getElementById('nav').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;view=b.dataset.view;render();});
+/* ============ DASHBOARD ============ */
+function vDash(){
+  const totalViews=sum(S.cards.map(c=>c.views));
+  const totalClicks=sum(S.cards.map(c=>c.clicks));
+  const hot=S.contacts.filter(c=>c.temp==='hot').length;
+  const avgWatch=Math.round(sum(S.cards.map(c=>c.watchPct))/S.cards.length);
+  const wk=S.weekly, mx=Math.max(...wk)||1, days=['M','T','W','T','F','S','S'];
+  const hotLeads=[...S.contacts].filter(c=>c.temp==='hot').sort((a,b)=>b.score-a.score);
+  const warmHot=S.contacts.filter(c=>c.temp!=='cold').length;
+  const asked=askedToTalk();
+  const vwS=trend(totalViews),tapS=trend(totalClicks),watS=trend(avgWatch),hotS=trend(hot);
+  return `
+  <div class="topbar">
+    <div class="title"><h2>Good morning, Fred 👋</h2><p>${warmHot} lead${warmHot===1?' is':'s are'} warm right now — ${asked} asked to talk. Here's where to spend your next hour.</p></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn ghost sm" onclick="reset()">↺ Reset demo</button>
+      <button class="btn primary" onclick="openBuilder()">＋ New Video Card</button>
+    </div>
+  </div>
+  <div class="grid g4">
+    ${statCard('Card Views (7d)',totalViews.toLocaleString(),totalViews>0?fpc(deltaPct(vwS)):'—',deltaPct(vwS)>=0,spark(vwS))}
+    ${statCard('Button Taps',totalClicks.toLocaleString(),totalClicks>0?fpc(deltaPct(tapS)):'—',deltaPct(tapS)>=0,spark(tapS))}
+    ${statCard('Avg. Watch %',avgWatch+'%',avgWatch>0?fpt(deltaPts(watS)):'—',deltaPts(watS)>=0,spark(watS))}
+    ${statCard('🔥 Hot Leads',hot,hot>0?(deltaPts(hotS)>=0?'+':'')+deltaPts(hotS):'—',deltaPts(hotS)>=0,spark(hotS))}
+  </div>
+  <div class="split" style="margin-top:20px">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <b>Engagement this week</b>
+        <span class="badge2">Views by day</span>
+      </div>
+      <div class="chartwrap" style="margin-top:22px">
+        ${wk.map((v,i)=>`<div class="bar" style="height:${Math.max(6,v/mx*100)}%"><span>${v}</span><small>${days[i]}</small></div>`).join('')}
+      </div>
+      <div style="height:20px"></div>
+      <div class="grid g3" style="margin-top:14px">
+        <div><div class="muted fz12 fw7">Best card</div><div style="margin-top:5px">${topCard().title} — <b>${topCard().watchPct}%</b> watch</div></div>
+        <div><div class="muted fz12 fw7">Best send time</div><div style="margin-top:5px">Tue &amp; Thu, <b>6–8pm</b></div></div>
+        <div><div class="muted fz12 fw7">Reply rate</div><div style="margin-top:5px"><b>${replyRate()}%</b> vs 11% for plain text</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <b>🔥 Call these first</b><button class="btn ghost sm" onclick="view='leads';render()">All leads →</button>
+      </div>
+      ${hotLeads.slice(0,4).map(c=>`
+        <div class="row" style="cursor:pointer" onclick="openLead('${c.id}')">
+          <div class="av" style="background:${tempColor(c.temp)}22;color:${tempColor(c.temp)}">${initials(c.name)}</div>
+          <div style="flex:1;min-width:0">
+            <div class="fw7 fz13">${c.name}</div>
+            <div class="mut2 fz12" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.lastAct} · ${ago(c.lastMin)}</div>
+          </div>
+          <div style="text-align:right"><div class="score" style="color:${tempColor(c.temp)}">${c.score}</div><div class="mut2 fz12">score</div></div>
+        </div>`).join('')}
+      <button class="btn sm" style="width:100%;margin-top:12px;justify-content:center" onclick="startRound()">📞 Start calling round</button>
+    </div>
+  </div>
+  <div class="sec-title">Live activity <span class="pill">TapAlerts</span></div>
+  <div class="card">
+    <div class="tl" style="margin-top:4px">
+      ${S.contacts.flatMap(c=>c.events.map(e=>({n:c.name,id:c.id,t:e.t,m:evMin(e),hot:e.hot}))).sort((a,b)=>a.m-b.m).slice(0,7).map(e=>`
+        <div class="ev ${e.hot?'hot':''}" style="cursor:pointer" onclick="openLead('${e.id}')"><b>${e.n}</b> — ${e.t} <span>· ${ago(e.m)}</span></div>`).join('')}
+    </div>
+  </div>
+  <div class="sec-title">Why LegacyTap beats a plain follow-up <span class="pill">Final Expense built-in</span></div>
+  <div class="grid g3">
+    ${feat('🎯','Niche templates &amp; scripts','Rate-lock, beneficiary, and "what it covers" cards written for FE prospects — compliant, senior-friendly language.')}
+    ${feat('⚡','Automations that follow up for you','Multi-touch sequences with watched / no-response branches so no warm lead ever cools off.')}
+    ${feat('📊','Scoring you can act on','Every open, replay and drop-off feeds a 0–100 lead score — you always know who to call next.')}
+  </div>`;
+}
+function statCard(lab,val,delta,up,sp){
+  return `<div class="card stat"><div class="lab">${lab}</div><div class="val">${val}</div>
+    ${delta==='—'?`<div class="delta" style="color:var(--mut2)">— no activity yet</div>`:`<div class="delta ${up?'up':'down'}">${up?'▲':'▼'} ${delta}</div>`}<div class="spark">${sp}</div></div>`;
+}
+function spark(arr){const mx=Math.max(...arr)||1,w=64,h=30,st=w/(arr.length-1);
+  const pts=arr.map((v,i)=>`${i*st},${h-(v/mx*(h-4))-2}`).join(' ');
+  return `<svg width="${w}" height="${h}"><polyline points="${pts}" fill="none" stroke="var(--brand2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;}
+function feat(ic,t,d){return `<div class="card"><div style="font-size:24px">${ic}</div><b style="display:block;margin:9px 0 5px;font-size:14.5px">${t}</b><p class="muted fz13" style="margin:0;line-height:1.5">${d}</p></div>`;}
+/* ============ DERIVED METRICS (computed from real data) ============ */
+function aggViews(){return sum(S.cards.map(c=>c.views));}
+function aggUniq(){return sum(S.cards.map(c=>c.uniq));}
+function aggClicks(){return sum(S.cards.map(c=>c.clicks));}
+function aggWatched(){return Math.round(sum(S.cards.map(c=>c.uniq*c.watchPct/100)));}
+function avgWatchPct(){return S.cards.length?Math.round(sum(S.cards.map(c=>c.watchPct))/S.cards.length):0;}
+function avgScore(){return S.contacts.length?Math.round(sum(S.contacts.map(c=>c.score))/S.contacts.length):0;}
+function topCard(){return [...S.cards].sort((a,b)=>b.watchPct-a.watchPct)[0]||{title:'—',watchPct:0};}
+function tapRate(){return Math.round(aggClicks()/Math.max(1,aggUniq())*100);}
+function bookedContacts(){return S.contacts.filter(c=>/book|quot/i.test(c.lastAct)).length;}
+function askedToTalk(){return S.contacts.filter(c=>/book|quot|talk|call|rate|interested/i.test(c.lastAct)||c.temp==='hot').length;}
+function bookRate(){return Math.round(bookedContacts()/Math.max(1,S.contacts.length)*100);}
+function replyRate(){const sent=S.outbox.length;if(sent>=5){return Math.round(S.outbox.filter(o=>o.status==='Replied').length/sent*100);}return tapRate();}
+function sourceShare(){const pool=S.contacts.filter(c=>c.temp!=='cold');const base=pool.length||1;const by={};pool.forEach(c=>{by[c.source]=(by[c.source]||0)+1;});const col={'Facebook Lead':'#2f6dff','Referral':'#12c8a5','Direct Mail':'#ffb020','Cold List':'#ff5a5f'};return Object.keys(by).map(s=>({s,v:Math.round(by[s]/base*100),c:col[s]||'#5b8bff'})).sort((a,b)=>b.v-a.v);}
+/* build a 7-point trend that ENDS at the real current value, shaped by the real weekly series */
+function trend(cur){const w=S.weekly,mn=Math.min(...w),mx=Math.max(...w),rng=(mx-mn)||1;return w.map(x=>Math.round(cur*(0.8+0.2*(x-mn)/rng)));}
+function deltaPct(s){const a=s[0]||1,b=s[s.length-1];return Math.round((b-a)/a*100);}
+function deltaPts(s){return Math.round(s[s.length-1]-s[0]);}
+function fpc(d){return (d>=0?'+':'')+d+'%';}
+function fpt(d){return (d>=0?'+':'')+d+' pts';}
+/* ============ CARDS ============ */
+function vCards(){
+  return `
+  <div class="topbar">
+    <div class="title"><h2>Video Cards</h2><p>Personal video follow-ups with tap buttons. Share by text, DM, or email.</p></div>
+    <button class="btn primary" onclick="openBuilder()">＋ New Video Card</button>
+  </div>
+  <div class="grid g3">
+    ${S.cards.map(c=>`
+      <div class="tile" onclick="openPreview('${c.id}')">
+        <div class="thumb" style="background:linear-gradient(135deg,${c.color},#0a1128)">
+          <div class="badge">${c.template}</div>
+          ${c.hasVideo?'<div class="badge" style="left:auto;right:10px;color:#7ef5d8">🎥 Recorded</div>':''}
+          <div class="play">▶</div>
+        </div>
+        <div class="meta">
+          <h4>${c.title}</h4>
+          <div class="mut2 fz12">${c.buttons.join(' · ')}</div>
+          <div class="st">
+            <span>👁 ${c.views.toLocaleString()}</span>
+            <span>👆 ${c.clicks}</span>
+            <span>▶ ${c.watchPct}%</span>
+            <span>🔥 ${c.hot}</span>
+          </div>
+        </div>
+      </div>`).join('')}
+    <div class="tile" onclick="openBuilder()" style="display:grid;place-items:center;min-height:220px;border-style:dashed">
+      <div style="text-align:center;color:var(--mut)"><div style="font-size:34px">＋</div><div class="fw7" style="margin-top:6px">Create a card</div></div>
+    </div>
+  </div>`;
+}
+/* ============ BUILDER ============ */
+const FE_TEMPLATES=[
+  {id:'t1',name:'Cold lead intro',hook:'Final Expense — what it actually covers',script:'Hi {first}, this is Fred with Sun Marketing. In 60 seconds I\'ll show you exactly what a final expense plan covers and roughly what folks your age are paying — no pressure, just so you have the facts.',buttons:['Book a Call','Request Quote','Save Contact']},
+  {id:'t2',name:'After the quote call',hook:'Quick follow-up on your plan',script:'Hi {first}, great talking with you. Here\'s the short version of the plan we discussed and your next step — tap below whenever you\'re ready and I\'ll take care of the rest.',buttons:['Book a Call','Request Quote','Save Contact']},
+  {id:'t3',name:'Rate lock urgency',hook:'Locking your rate before your birthday',script:'Hi {first}, quick heads up — final expense rates step up on your next birthday. If we lock it in beforehand you keep the lower rate for life. Takes about 4 minutes.',buttons:['Book a Call','Request Quote']},
+  {id:'t4',name:'Beneficiary check-in',hook:'Making sure your family is set',script:'Hi {first}, just making sure the people you love are protected and know the plan. Tap "Book a Call" and we\'ll button up the details together.',buttons:['Book a Call','Save Contact']},
+  {id:'t5',name:'Mortgage Protection — new homeowner',hook:'Protecting your home if something happens to you',script:'Hi {first}, congratulations on the new home! Quick 60-second video — if anything ever happened to you, mortgage protection makes sure your family keeps the house, not the payments. Let me show you what it looks like for your loan.',buttons:['Book a Call','Request Quote','Save Contact'],pack:'Mortgage Protection'},
+  {id:'t6',name:'Mortgage Protection — return of premium',hook:'Coverage that pays you back if you don\'t use it',script:'Hi {first}, most folks don\'t know mortgage protection can come with return-of-premium — if you never use it, you get your money back. Here\'s how it works on a loan like yours. Takes 4 minutes to run your exact number.',buttons:['Book a Call','Request Quote'],pack:'Mortgage Protection'},
+  {id:'t7',name:'Mortgage Protection — lender letter follow-up',hook:'That letter from your lender — here\'s the plain-English version',script:'Hi {first}, you may have gotten a notice about protecting your mortgage. I put together a quick video that explains what\'s real, what to ignore, and what actual coverage costs for your age and loan — no pressure at all.',buttons:['Book a Call','Request Quote','Save Contact'],pack:'Mortgage Protection'}
+];
+let builder={title:'',hook:'',script:'',buttons:['Book a Call','Request Quote','Save Contact'],color:'#1b2f6b',videoBlob:null};
+const ALL_BTNS=['Book a Call','Request Quote','Save Contact','Visit Site','Text Me','Beneficiary Info'];
+function openBuilder(){
+  builder={title:'',hook:'',script:'',buttons:['Book a Call','Request Quote','Save Contact'],color:'#1b2f6b',videoBlob:null};
+  const c=$('#modal');
+  c.innerHTML=`
+    <div class="mh"><h3>Create a Video Card</h3><button class="x" onclick="closeM()">✕</button></div>
+    <div class="mb">
+      <div class="muted fz12 fw7" style="margin-bottom:6px">1 · Start from a Final Expense template</div>
+      <div class="grid g2">
+        ${FE_TEMPLATES.map(t=>`<div class="tmpl" onclick="applyTmpl('${t.id}')"><b>${t.name}</b><p>${t.hook}</p></div>`).join('')}
+      </div>
+      <label class="fl">2 · Record or upload your video</label>
+      <div class="card recwrap" id="recwrap" style="border-style:dashed;padding:12px"></div>
+      <input type="file" id="recfile" accept="video/*" style="display:none" onchange="fileChosen(this)">
+      <label class="fl">Card title (internal)</label>
+      <input class="in" id="b_title" placeholder="e.g. Quick follow-up for Dorothy" oninput="builder.title=this.value">
+      <label class="fl">On-card headline (what the prospect sees)</label>
+      <input class="in" id="b_hook" placeholder="e.g. Final Expense — what it actually covers" oninput="builder.hook=this.value">
+      <label class="fl">Video script / opener <span class="mut2" style="font-weight:600">— AI-drafted, senior-friendly</span></label>
+      <textarea class="in" id="b_script" placeholder="Your talking points..." oninput="builder.script=this.value"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn sm ghost" onclick="aiRewrite('warmer')">✨ Warmer</button>
+        <button class="btn sm ghost" onclick="aiRewrite('urgency')">✨ Add urgency</button>
+        <button class="btn sm ghost" onclick="aiRewrite('shorter')">✨ Shorter</button>
+      </div>
+      <label class="fl">3 · Tap buttons</label>
+      <div class="chipset" id="b_btns"></div>
+      <div class="chipset" id="b_addbtns" style="margin-top:10px"></div>
+      <label class="fl">Card color</label>
+      <div class="chipset">${['#1b2f6b','#12463c','#4a2a5e','#5e3a1f','#1f2937'].map(col=>`<div onclick="builder.color='${col}';drawBuilder()" style="width:34px;height:34px;border-radius:9px;cursor:pointer;background:linear-gradient(135deg,${col},#0a1128);box-shadow:inset 0 0 0 2px ${builder.color===col?'var(--brand2)':'transparent'}"></div>`).join('')}</div>
+      <div style="display:flex;gap:10px;margin-top:22px">
+        <button class="btn primary" style="flex:1;justify-content:center" onclick="saveCard()">Create card &amp; get share link</button>
+        <button class="btn ghost" onclick="closeM()">Cancel</button>
+      </div>
+    </div>`;
+  drawBuilder();drawRecIdle();openM();
+  setTimeout(()=>$('#b_title')&&$('#b_title').focus(),50);
+}
+function drawBuilder(){
+  const on=$('#b_btns'),add=$('#b_addbtns');if(!on)return;
+  on.innerHTML=builder.buttons.map(b=>`<span class="chip on">${b} <span class="rm" style="cursor:pointer" onclick="rmBtn('${b}')">✕</span></span>`).join('')||'<span class="mut2 fz12">No buttons yet — add some below</span>';
+  add.innerHTML=ALL_BTNS.filter(b=>!builder.buttons.includes(b)).map(b=>`<span class="chip" style="cursor:pointer" onclick="addBtn('${b}')">＋ ${b}</span>`).join('');
+}
+function addBtn(b){if(builder.buttons.length>=4){toast('4 buttons max keeps it senior-friendly','⚠️');return;}builder.buttons.push(b);drawBuilder();}
+function rmBtn(b){builder.buttons=builder.buttons.filter(x=>x!==b);drawBuilder();}
+function applyTmpl(id){const t=FE_TEMPLATES.find(x=>x.id===id);builder.hook=t.hook;builder.script=t.script;builder.buttons=[...t.buttons];builder.title=builder.title||t.name;
+  $('#b_hook').value=t.hook;$('#b_script').value=t.script;if(!$('#b_title').value)$('#b_title').value=t.name;builder.title=$('#b_title').value;drawBuilder();toast('Template loaded — tweak the script & record','📝');}
+function aiRewrite(mode){
+  let s=$('#b_script').value||'Hi {first}, this is Fred with Sun Marketing.';
+  if(mode==='warmer')s='Hi {first}, it\'s Fred — I really enjoyed our chat. I put together a quick 60-second video just for you so everything\'s crystal clear. No rush at all, watch whenever you get a minute. 💙';
+  if(mode==='urgency')s=(s.replace(/\s*$/,''))+' One quick note — rates tick up on your next birthday, so locking this in soon keeps you at today\'s price for life.';
+  if(mode==='shorter')s='Hi {first}, Fred here — 30-second video showing exactly what your plan covers and your next step. Tap below when ready.';
+  $('#b_script').value=s;builder.script=s;toast('AI rewrote your opener ✨','✨');
+}
+function saveCard(){
+  if(!builder.title&&!builder.hook){toast('Add a title or headline first','⚠️');return;}
+  const id='k'+Date.now();
+  const card={id,title:builder.title||builder.hook,template:'Custom',views:0,uniq:0,clicks:0,watchPct:0,hot:0,created:'just now',buttons:builder.buttons,color:builder.color,hook:builder.hook,script:builder.script};
+  if(builder.videoBlob){card.hasVideo=true;VDB.put(id,builder.videoBlob).catch(()=>{});}
+  S.cards.unshift(card);save();closeM();view='cards';render();
+  setTimeout(()=>openShare(id),250);
+}
+function openShare(id){
+  const c=S.cards.find(x=>x.id===id);
+  const link='legacytap.app/c/'+(c.title||'card').toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,24);
+  $('#modal').innerHTML=`
+    <div class="mh"><h3>Your card is live 🎉</h3><button class="x" onclick="closeM()">✕</button></div>
+    <div class="mb" style="text-align:center">
+      <p class="muted" style="margin-top:0">Share it anywhere — opens instantly on any phone, no app or download.</p>
+      <div class="in" style="display:flex;align-items:center;gap:10px;justify-content:space-between;text-align:left">
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">https://${link}</span>
+        <button class="btn sm primary" onclick="navigator.clipboard&&navigator.clipboard.writeText('https://${link}');toast('Link copied 📋')">Copy</button>
+      </div>
+      <div class="grid g4" style="margin-top:16px">
+        ${['iMessage','WhatsApp','Email','QR Code'].map(ch=>`<button class="btn" style="flex-direction:column;gap:8px;padding:16px 6px" onclick="toast('${ch} share sheet would open')"><span style="font-size:22px">${ch==='iMessage'?'💬':ch==='WhatsApp'?'🟢':ch==='Email'?'✉️':'▦'}</span><span class="fz12">${ch}</span></button>`).join('')}
+      </div>
+      <div class="card" style="margin-top:16px;text-align:left;display:flex;gap:12px;align-items:center">
+        <div style="font-size:22px">⚡</div>
+        <div style="flex:1"><b class="fz13">Enroll in "New Lead — 5-Touch Nurture"?</b><div class="muted fz12">We'll auto-send reminders and alert you the moment they watch.</div></div>
+        <button class="btn sm primary" onclick="closeM();view='auto';render();toast('Ready to enroll leads ⚡')">Set up</button>
+      </div>
+      <button class="btn" style="width:100%;justify-content:center;margin-top:14px" onclick="openPreview('${id}')">Preview recipient view</button>
+    </div>`;
+  openM();
+}
+/* ============ RECIPIENT PREVIEW ============ */
+function openPreview(id){
+  const c=S.cards.find(x=>x.id===id);
+  const btns=c.buttons||['Book a Call','Save Contact'];
+  $('#modal').innerHTML=`
+    <div class="mh"><h3>Recipient view</h3><button class="x" onclick="closeM()">✕</button></div>
+    <div class="mb">
+      <p class="muted fz13" style="margin-top:0;text-align:center">This is exactly what your prospect sees when they tap your link.</p>
+      <div class="phone"><div class="screen">
+        <div class="pvid" style="background:linear-gradient(135deg,${c.color||'#1b2f6b'},#0a1128)">
+          <div class="play" onclick="simWatch()">▶</div>
+          <div class="agent"><div class="av" style="background:#fff;color:#0b1020">${AGENT.avatar}</div><div><div class="fw7 fz12">${AGENT.name}</div><div style="font-size:10.5px;opacity:.8">${AGENT.agency}</div></div></div>
+        </div>
+        <div class="pbody">
+          <h3>${c.hook||c.title}</h3>
+          <div class="muted fz12">${AGENT.name} sent you a 60-second video</div>
+          <div class="pbtns">
+            ${btns.map((b,i)=>`<div class="pbtn ${i===0?'main':''}" onclick="simTap('${b}')">${btnIcon(b)} ${b}</div>`).join('')}
+          </div>
+          ${S.settings.compliance?`<div class="mut2" style="font-size:10px;text-align:center;margin-top:12px;line-height:1.4">Licensed insurance content. Not affiliated with any government agency.</div>`:''}
+        </div>
+      </div></div>
+      <div class="muted fz12" style="text-align:center;margin-top:14px">Tap the video or a button to see how tracking &amp; alerts fire →</div>
+    </div>`;
+  openM();
+  if(c.hasVideo){VDB.get(c.id).then(b=>{
+    if(!b)return;
+    const url=URL.createObjectURL(b);
+    const pv=document.querySelector('.pvid');
+    if(pv)pv.innerHTML='<video src="'+url+'" controls playsinline style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"></video>';
+  }).catch(()=>{});}
+}
+function btnIcon(b){return {'Book a Call':'📅','Request Quote':'💲','Save Contact':'👤','Visit Site':'🌐','Text Me':'💬','Beneficiary Info':'🛡'}[b]||'•';}
+function simWatch(){toast('Prospect watched 100% — lead score +18, you\'ll get a TapAlert 🔥','🔥');}
+function simTap(b){toast('Tapped "'+b+'" — logged to timeline + hot-lead alert sent','⚡');}
+/* ============ LEADS ============ */
+let leadFilter='all';
+function vLeads(){
+  const list=[...S.contacts].sort((a,b)=>b.score-a.score).filter(c=>leadFilter==='all'||c.temp===leadFilter);
+  const counts={all:S.contacts.length,hot:S.contacts.filter(c=>c.temp==='hot').length,warm:S.contacts.filter(c=>c.temp==='warm').length,cold:S.contacts.filter(c=>c.temp==='cold').length};
+  return `
+  <div class="topbar">
+    <div class="title"><h2>Leads &amp; Scoring</h2><p>Every open, replay and drop-off feeds a live 0–100 score. Highest intent floats to the top.</p></div>
+    <button class="btn primary" onclick="openAddLead()">📥 Add / Import Leads</button>
+  </div>
+  <div class="seg" style="margin-bottom:16px">
+    ${['all','hot','warm','cold'].map(f=>`<button class="${leadFilter===f?'on':''}" onclick="leadFilter='${f}';render()">${f[0].toUpperCase()+f.slice(1)} (${counts[f]})</button>`).join('')}
+  </div>
+  <div class="card" style="padding:8px 18px">
+    ${list.map(c=>`
+      <div class="row" style="cursor:pointer" onclick="openLead('${c.id}')">
+        <div class="av" style="background:${tempColor(c.temp)}22;color:${tempColor(c.temp)}">${initials(c.name)}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:9px"><span class="fw7 fz13">${c.name}</span><span class="temp ${tempClass(c.temp)}">${c.temp}</span>${c.auto?`<span class="badge2" style="color:var(--brand2)">⚡ auto</span>`:''}</div>
+          <div class="mut2 fz12">${c.age} · ${c.city} · ${c.source}</div>
+        </div>
+        <div style="width:140px" class="fz12 muted">
+          <div>${c.lastAct}</div><div class="mut2">${ago(c.lastMin)}</div>
+        </div>
+        <div style="width:120px">
+          <div class="barmini"><i style="width:${c.score}%;background:${tempColor(c.temp)}"></i></div>
+          <div class="mut2 fz12" style="margin-top:5px">▶ ${c.watchPct}% · ↺ ${c.replays} · 👆 ${c.clicks}</div>
+        </div>
+        <div class="score" style="width:40px;text-align:right;color:${tempColor(c.temp)}">${c.score}</div>
+      </div>`).join('')||'<div class="empty"><div class="big">◆</div>No leads in this bucket.</div>'}
+  </div>`;
+}
+function openLead(id){
+  const c=S.contacts.find(x=>x.id===id);
+  const first=c.name.split(' ')[0];
+  $('#modal').innerHTML=`
+    <div class="mh"><h3>${c.name}</h3><button class="x" onclick="closeM()">✕</button></div>
+    <div class="mb">
+      <div style="display:flex;gap:16px;align-items:center;margin-bottom:6px">
+        <div class="av" style="width:56px;height:56px;font-size:19px;background:${tempColor(c.temp)}22;color:${tempColor(c.temp)}">${initials(c.name)}</div>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:9px"><span class="temp ${tempClass(c.temp)}">${c.temp} lead</span><span class="mut2 fz12">${c.source}</span></div>
+          <div class="muted fz13" style="margin-top:4px">${c.age} yrs · ${c.city} · ${c.phone}</div>
+        </div>
+        <div style="text-align:center"><div class="score" style="font-size:30px;color:${tempColor(c.temp)}">${c.score}</div><div class="mut2 fz12">lead score</div></div>
+      </div>
+      <div style="display:flex;gap:8px;margin:14px 0">
+        <button class="btn primary sm" style="flex:1;justify-content:center" onclick="toast('Calling ${c.phone} — Twilio dialer','📞')">📞 Call now</button>
+        <button class="btn sm" style="flex:1;justify-content:center" onclick="closeM();openBuilder();setTimeout(()=>{const t=document.getElementById('b_title');if(t){t.value='Quick follow-up for ${first}';builder.title=t.value;}},120)">🎥 Send card</button>
+        <button class="btn sm" style="flex:1;justify-content:center" onclick="openEnroll('${c.id}')">⚡ ${c.auto?'Automation':'Enroll'}</button>
+      </div>
+      ${enrollBanner(c)}
+      <div class="grid g3" style="margin:14px 0">
+        <div class="card" style="padding:12px"><div class="mut2 fz12">Watch %</div><div class="fw7" style="font-size:19px;margin-top:3px">${c.watchPct}%</div></div>
+        <div class="card" style="padding:12px"><div class="mut2 fz12">Replays</div><div class="fw7" style="font-size:19px;margin-top:3px">${c.replays}</div></div>
+        <div class="card" style="padding:12px"><div class="mut2 fz12">Button taps</div><div class="fw7" style="font-size:19px;margin-top:3px">${c.clicks}</div></div>
+      </div>
+      ${c.tags.length?`<div class="chipset" style="margin-bottom:14px">${c.tags.map(t=>`<span class="chip">🏷 ${t}</span>`).join('')}</div>`:''}
+      <div class="muted fz12 fw7" style="margin:6px 0 12px">Engagement timeline</div>
+      <div class="tl">
+        ${c.events.map(e=>`<div class="ev ${e.hot?'hot':''}"><b>${e.t}</b> <span>· ${ago(evMin(e))}</span></div>`).join('')}
+      </div>
+    </div>`;
+  openM();
+}
+function enrollBanner(c){
+  if(!c.auto)return '';
+  const a=seqOf(c);if(!a)return '';
+  const acts=a.steps.filter(s=>s.type==='act');
+  const sentSoFar=a.steps.slice(0,c.auto.step).filter(s=>s.type==='act').length;
+  const nextTxt=c.auto.step>=a.steps.length?'sequence complete':(c.auto.waitDays>0?'next touch in '+c.auto.waitDays+' day'+(c.auto.waitDays===1?'':'s'):'next touch on the next day');
+  return `<div class="abanner">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:16px">⚡</span>
+      <div style="flex:1"><b class="fz13">In automation: ${a.name}</b><div class="mut2 fz12" style="margin-top:2px">${sentSoFar} of ${acts.length} touches sent · ${nextTxt}${a.active?'':' · sequence paused'}</div></div>
+      <button class="minibtn" style="width:auto;padding:0 10px" onclick="unenroll('${c.id}')">Remove</button>
+    </div>
+    <div class="prog">${acts.map((s,k)=>`<i class="${k<sentSoFar?'done':''}"></i>`).join('')}</div>
+  </div>`;
+}
+function openEnroll(cid){
+  const c=S.contacts.find(x=>x.id===cid);
+  $('#modal').innerHTML=`
+    <div class="mh"><h3>⚡ Automation — ${c.name.split(' ')[0]}</h3><button class="x" onclick="openLead('${cid}')">✕</button></div>
+    <div class="mb">
+      ${c.auto?enrollBanner(c):'<p class="muted fz13" style="margin-top:0">Drop this lead into a sequence and LegacyTap will send every touch on schedule.</p>'}
+      <label class="fl">${c.auto?'Switch to another sequence':'Choose a sequence'}</label>
+      ${S.autos.length?S.autos.map(a=>`<div class="tmpl" style="margin-bottom:9px" onclick="manualEnroll('${cid}','${a.id}')"><b>${a.name} ${a.active?'<span class="badge2" style="color:var(--good)">● Active</span>':'<span class="badge2">○ Paused — will activate</span>'}</b><p>${a.steps.filter(s=>s.type==='act').length} touches · trigger: ${TRIGGERS[trigKind(a)]}</p></div>`).join(''):'<div class="empty"><div class="big">⚡</div>No sequences yet.</div>'}
+      <button class="btn sm ghost" style="width:100%;justify-content:center;margin-top:6px" onclick="closeM();openSeqBuilder()">＋ Build a new sequence</button>
+    </div>`;
+  openM();
+}
+/* ============ AUTOMATIONS ============ */
+function vAuto(){
+  const live=S.contacts.filter(c=>c.auto).length;
+  const sentTotal=S.outbox.length;
+  const dayCounts=[];for(let d=Math.max(0,S.simDay-6);d<=S.simDay;d++){dayCounts.push(S.outbox.filter(o=>o.day===d).length);}
+  while(dayCounts.length<7)dayCounts.unshift(0);
+  return `
+  <div class="topbar">
+    <div class="title"><h2>Follow-Up Automations</h2><p>The part TapFlick makes you do by hand. Build once — it sends every touch for you.</p></div>
+    <button class="btn primary" onclick="openSeqBuilder()">＋ New Sequence</button>
+  </div>
+  <div class="clockbar">
+    <div>
+      <div class="daybig">📆 Demo Day ${S.simDay}</div>
+      <div class="sub">${live} lead${live===1?'':'s'} live in automations · ${sentTotal} auto-touch${sentTotal===1?'':'es'} sent</div>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn sm primary" onclick="advanceDay()">▶ Advance 1 day</button>
+    <button class="btn sm" onclick="runDays(7)">⏩ Run 7 days</button>
+    <button class="btn sm ghost" onclick="openSendLog()">📨 Send log</button>
+    <button class="btn sm ghost" onclick="resetClock()">↺ Reset clock</button>
+  </div>
+  <div class="grid g3" style="margin-bottom:22px">
+    ${statCard('Active sequences',S.autos.filter(a=>a.active).length,'running',true,spark([1,1,2,2,2,2,S.autos.filter(a=>a.active).length||1]))}
+    ${statCard('Leads live in automations',live,'auto-nurtured',true,spark([2,3,4,5,6,7,live||1]))}
+    ${statCard('Auto-touches sent',sentTotal,S.simDay?`over ${S.simDay} day${S.simDay===1?'':'s'}`:'press ▶ to run',true,spark(dayCounts.map(x=>x+0.2)))}
+  </div>
+  ${S.autos.map(a=>{
+    const leads=liveEnrolled(a);
+    const touches=a.steps.filter(s=>s.type==='act').length;
+    return `
+    <div class="card" style="margin-bottom:16px">
+      <div class="seqcard-head">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:10px"><b style="font-size:15px">${a.name}</b>
+            <span class="badge2" style="color:${a.active?'var(--good)':'var(--mut2)'}">${a.active?'● Active':'○ Paused'}</span></div>
+          <div class="mut2 fz12" style="margin-top:4px">${leads.length} live · <span class="stat-sent">${a.sent||0} sent</span> · <span class="stat-rep">${a.replies||0} replies</span> · ${touches} touch${touches===1?'':'es'}</div>
+        </div>
+        <button class="minibtn" style="width:auto;padding:0 10px" title="Edit sequence" onclick="editSeq('${a.id}')">✎ Edit</button>
+        <div class="toggle ${a.active?'on':''}" onclick="toggleAuto('${a.id}')"><i></i></div>
+      </div>
+      ${leads.length?`<div class="enrollstrip">${leads.slice(0,8).map(c=>`
+        <span class="epill"><span class="av" style="background:${tempColor(c.temp)}22;color:${tempColor(c.temp)}">${initials(c.name)}</span>${c.name.split(' ')[0]} <span class="nx">· ${c.auto.waitDays>0?'next in '+c.auto.waitDays+'d':(c.auto.step>=a.steps.length?'done':'due next day')}</span></span>`).join('')}${leads.length>8?`<span class="epill"><span class="nx">+${leads.length-8} more</span></span>`:''}</div>`:(a.active?`<div class="mut2 fz12" style="margin:2px 0 14px">No leads enrolled yet — matching leads get picked up automatically each day, or enroll one from a lead's profile.</div>`:'')}
+      <div class="flow">
+        ${a.steps.map((s,i)=>`
+          <div class="step">
+            <div class="rail">
+              <div class="dot ${s.type}">${s.type==='trig'?'⚡':s.type==='wait'?'⏳':'✦'}</div>
+              ${i<a.steps.length-1?'<div class="line"></div>':''}
+            </div>
+            <div class="body">
+              <span class="tag">${s.type==='trig'?'Trigger':s.type==='wait'?'Condition':(channelOf(s)==='email'?'Action · Email':'Action · SMS')}</span>
+              <b>${s.title}</b>
+              ${s.desc?`<p>${s.desc}</p>`:''}
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;}).join('')}`;
+}
+/* ============ SENDING ENGINE (simulated) ============ */
+function activeAutos(){return S.autos.filter(a=>a.active);}
+function seqOf(c){return c.auto?S.autos.find(a=>a.id===c.auto.seqId):null;}
+function liveEnrolled(a){return S.contacts.filter(c=>c.auto&&c.auto.seqId===a.id);}
+function trigKind(a){const s=a.steps[0];if(!s)return 'new';if(s.trig)return s.trig;const t=(s.title+' '+(s.desc||'')).toLowerCase();
+  if(t.includes('watch'))return 'watched';if(t.includes('quote'))return 'quote';
+  if(t.includes('no open')||t.includes('cold')||t.includes('7 day')||t.includes('no response'))return 'noopen';return 'new';}
+function waitDaysOf(s){if(s.days!=null)return s.days;const m=(s.title||'').match(/(\d+)\s*day/i);return m?parseInt(m[1]):(/wait/i.test(s.title||'')?2:0);}
+function channelOf(s){return s.channel||(/email/i.test((s.title||'')+' '+(s.desc||''))?'email':'sms');}
+function cardOf(s){return s.cardId?S.cards.find(k=>k.id===s.cardId):null;}
+function sendVerb(ch){return ch==='email'?'Email sent':'Card sent by text';}
+function evMin(e){return e.day!=null?Math.max(2,(S.simDay-e.day)*1440+(e.min||30)):e.m;}
+function matchTrig(k,c){
+  if(k==='watched')return c.watchPct>=80&&!/book/i.test(c.lastAct);
+  if(k==='quote')return /quot/i.test(c.lastAct);
+  if(k==='noopen')return c.watchPct===0||c.temp==='cold';
+  return c.temp!=='hot'&&c.watchPct<60; /* new / general nurture */
+}
+function eligibleFor(a){const k=trigKind(a);return S.contacts.filter(c=>!c.auto&&!((c.doneSeqs||[]).includes(a.id))&&matchTrig(k,c));}
+function assignAuto(c,a){c.auto={seqId:a.id,step:0,waitDays:0};}
+function fireAct(c,a,s){
+  const ch=channelOf(s),card=cardOf(s);
+  const what=card?card.title:(s.msg||s.title.replace(/^Day\s*\d+\s*[—-]\s*/i,''));
+  c.events.unshift({t:sendVerb(ch)+': '+String(what).slice(0,58),day:S.simDay,min:10,auto:true});
+  S.outbox.unshift({id:'o'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),day:S.simDay,cid:c.id,name:c.name,seq:a.name,channel:ch,action:(card?'Video card · '+card.title:(s.msg||s.title)),status:'Sent'});
+  a.sent=(a.sent||0)+1;c.lastMin=1;
+  let hot=false;
+  if(Math.random()<0.55){
+    c.watchPct=Math.min(100,c.watchPct+(16+Math.floor(Math.random()*24)));
+    if(Math.random()<0.4)c.replays++;
+    c.score=Math.min(99,c.score+(8+Math.floor(Math.random()*14)));
+    c.lastAct='Watched '+c.watchPct+'% (auto touch)';
+    c.events.unshift({t:'Watched '+c.watchPct+'% of card',day:S.simDay,min:8,auto:true});
+    if(S.outbox[0])S.outbox[0].status='Opened';
+    if(c.watchPct>=80&&c.score>=70){
+      c.temp='hot';hot=true;c.clicks++;c.lastAct='🔥 High intent — asked to talk';
+      c.events.unshift({t:'Tapped "Book a Call" — hot lead',day:S.simDay,min:5,hot:true,auto:true});
+      if(S.outbox[0])S.outbox[0].status='Replied';
+      a.replies=(a.replies||0)+1;
+    }else if(c.score>=45){c.temp='warm';}
+  }
+  return {sent:true,hot,name:c.name};
+}
+function completeAuto(c,a){
+  c.events.unshift({t:'Sequence "'+a.name+'" finished',day:S.simDay,min:15,auto:true});
+  c.doneSeqs=(c.doneSeqs||[]);if(!c.doneSeqs.includes(a.id))c.doneSeqs.push(a.id);
+  c.auto=null;return {done:true,name:c.name};
+}
+function stepContact(c){
+  const a=seqOf(c);
+  if(!a||!a.active){c.auto=null;return null;}
+  if(c.auto.waitDays>0){c.auto.waitDays--;if(c.auto.waitDays>0)return null;}
+  let i=c.auto.step;
+  while(i<a.steps.length){
+    const s=a.steps[i];
+    if(s.type==='trig'){i++;continue;}
+    if(s.type==='wait'){i++;const d=waitDaysOf(s);if(d>0){c.auto.step=i;c.auto.waitDays=d;return null;}continue;}
+    c.auto.step=i+1;return fireAct(c,a,s);
+  }
+  return completeAuto(c,a);
+}
+function tick(){
+  S.simDay++;
+  /* pick up newly-eligible leads into active sequences (no fire yet — their Day-0 sends in the step loop) */
+  activeAutos().forEach(a=>{if(liveEnrolled(a).length<6)eligibleFor(a).slice(0,6-liveEnrolled(a).length).forEach(c=>assignAuto(c,a));});
+  let sends=0,hots=0,dones=0;
+  S.contacts.slice().forEach(c=>{if(c.auto){const r=stepContact(c);if(r){if(r.sent){sends++;if(r.hot)hots++;}if(r.done)dones++;}}});
+  return {sends,hots,dones};
+}
+function advanceDay(){
+  if(!activeAutos().length){toast('No active sequences — flip one on first ⚡','⚡');return;}
+  const r=tick();save();render();
+  toast(`Day ${S.simDay}: ${r.sends} touch${r.sends===1?'':'es'} sent`+(r.hots?` · ${r.hots} went hot 🔥`:'')+(r.dones?` · ${r.dones} finished`:''),'⚡');
+}
+function runDays(n){
+  if(!activeAutos().length){toast('No active sequences — flip one on first ⚡','⚡');return;}
+  let s=0,h=0,d=0;for(let k=0;k<n;k++){const r=tick();s+=r.sends;h+=r.hots;d+=r.dones;}
+  save();render();
+  toast(`Ran ${n} days → ${s} sent · ${h} hot 🔥 · ${d} finished (now Day ${S.simDay})`,'⚡');
+}
+function resetClock(){if(!confirm('Reset the demo clock to Day 0? This clears the send log and un-enrolls current leads.'))return;S.simDay=0;S.outbox=[];S.contacts.forEach(c=>{c.auto=null;c.doneSeqs=[];});S.autos.forEach(a=>{a.sent=0;a.replies=0;});S.seededEnroll=false;bootstrapEnroll();save();render();toast('Demo clock reset to Day 0');}
+function toggleAuto(id){
+  const a=S.autos.find(x=>x.id===id);a.active=!a.active;
+  if(a.active){
+    let elig=eligibleFor(a);
+    if(!elig.length)elig=S.contacts.filter(c=>!c.auto).sort((x,y)=>x.score-y.score).slice(0,2);
+    elig=elig.slice(0,6);let fired=0;
+    elig.forEach(c=>{assignAuto(c,a);const r=stepContact(c);if(r&&r.sent)fired++;});
+    save();render();
+    toast(`${a.name} activated — ${elig.length} lead${elig.length===1?'':'s'} enrolled, ${fired} first touch${fired===1?'':'es'} sent ⚡`,'⚡');
+  }else{
+    S.contacts.forEach(c=>{if(c.auto&&c.auto.seqId===a.id)c.auto=null;});
+    save();render();toast(a.name+' paused — enrolled leads released');
+  }
+}
+function bootstrapEnroll(){
+  activeAutos().forEach(a=>{eligibleFor(a).slice(0,2).forEach(c=>{assignAuto(c,a);stepContact(c);});});
+  S.seededEnroll=true;
+}
+function manualEnroll(cid,aid){
+  const c=S.contacts.find(x=>x.id===cid),a=S.autos.find(x=>x.id===aid);
+  if(!a.active){a.active=true;}
+  assignAuto(c,a);const r=stepContact(c);
+  save();closeM();render();
+  toast(`${c.name.split(' ')[0]} enrolled in "${a.name}"${r&&r.sent?' — first touch sent ⚡':''}`,'⚡');
+}
+function unenroll(cid){
+  const c=S.contacts.find(x=>x.id===cid);const nm=c.name.split(' ')[0];c.auto=null;
+  save();closeM();render();toast(nm+' removed from automation');
+}
+function openSendLog(){
+  const rows=S.outbox.slice(0,120);
+  $('#modal').innerHTML=`
+    <div class="mh"><h3>📨 Automated send log</h3><button class="x" onclick="closeM()">✕</button></div>
+    <div class="mb">
+      <p class="muted fz13" style="margin-top:0">Every touch your automations have sent — Day ${S.simDay}. ${S.outbox.length} total. In production these go out over real SMS/email via Twilio.</p>
+      ${rows.length?`<div class="card" style="padding:4px 6px;overflow:auto">
+        <table class="logtbl"><thead><tr><th>Day</th><th>Lead</th><th>Sequence</th><th>Channel</th><th>Touch</th><th>Status</th></tr></thead>
+        <tbody>${rows.map(o=>`<tr><td class="mut2">D${o.day}</td><td class="fw7">${o.name}</td><td class="mut2">${o.seq}</td><td>${o.channel==='email'?'✉ Email':'💬 SMS'}</td><td style="max-width:230px">${o.action}</td><td style="color:${o.status==='Replied'?'var(--hot)':o.status==='Opened'?'var(--accent)':'var(--mut2)'};font-weight:700">${o.status}</td></tr>`).join('')}</tbody></table>
+      </div>`:'<div class="empty"><div class="big">📭</div>Nothing sent yet. Activate a sequence and press ▶ Advance 1 day.</div>'}
+    </div>`;
+  openM();
+}
+/* ============ ANALYTICS ============ */
+let anaRange='7d';
+function vAnalytics(){
+  const mult=anaRange==='7d'?1:anaRange==='30d'?4.1:11.6;
+  const engaged=S.contacts.filter(c=>c.watchPct>0).length||1;
+  const bookConv=Math.min(0.6,bookedContacts()/engaged);
+  const wtr=avgWatchPct(),ttr=tapRate(),bkr=bookRate(),ascore=avgScore();
+  const funnel=[
+    {l:'Cards delivered',v:aggViews(),c:'#5b8bff'},
+    {l:'Opened',v:aggUniq(),c:'#4f8bff'},
+    {l:'Watched ≥ 50%',v:aggWatched(),c:'#2f6dff'},
+    {l:'Tapped a button',v:aggClicks(),c:'#12c8a5'},
+    {l:'Booked / quoted',v:aggClicks()>0?Math.max(1,Math.round(aggClicks()*bookConv)):0,c:'#22c55e'}
+  ].map(f=>({...f,v:Math.round(f.v*mult)}));
+  const mx=funnel[0].v||1;
+  const dbase=aggViews()>0?100:0;
+  const drop=[{s:'0–25%',v:dbase},{s:'25–50%',v:Math.round(dbase-(dbase-wtr)*0.42)},{s:'50–75%',v:Math.round(dbase-(dbase-wtr)*0.74)},{s:'75–100%',v:wtr}];
+  const srcRaw=sourceShare(),srcMx=(srcRaw[0]&&srcRaw[0].v)||1;
+  const src=srcRaw.map(s=>({...s,mxv:srcMx}));
+  return `
+  <div class="topbar">
+    <div class="title"><h2>Analytics</h2><p>The deep layer TapFlick doesn't give you — watch-through, drop-off, and where your best leads come from.</p></div>
+    <div class="seg">${['7d','30d','90d'].map(r=>`<button class="${anaRange===r?'on':''}" onclick="anaRange='${r}';render()">${r}</button>`).join('')}</div>
+  </div>
+  <div class="grid g4" style="margin-bottom:20px">
+    ${statCard('Watch-through rate',wtr+'%',wtr>0?fpt(deltaPts(trend(wtr))):'—',true,spark(trend(wtr)))}
+    ${statCard('Tap-through rate',ttr+'%',ttr>0?fpt(deltaPts(trend(ttr))):'—',true,spark(trend(ttr)))}
+    ${statCard('Booking rate',bkr+'%',bkr>0?fpt(deltaPts(trend(bkr))):'—',true,spark(trend(bkr)))}
+    ${statCard('Avg. lead score',ascore,ascore>0?(deltaPts(trend(ascore))>=0?'+':'')+deltaPts(trend(ascore)):'—',true,spark(trend(ascore)))}
+  </div>
+  <div class="split">
+    <div class="card">
+      <b>Follow-up funnel</b><div class="mut2 fz12" style="margin-bottom:14px">Where prospects fall off — and where automations recover them</div>
+      ${funnel.map((f,i)=>`
+        <div style="margin-bottom:13px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px"><span class="fw7">${f.l}</span><span class="muted">${f.v.toLocaleString()} · ${Math.round(f.v/mx*100)}%</span></div>
+          <div class="barmini" style="height:12px"><i style="width:${f.v/mx*100}%;background:${f.c}"></i></div>
+          ${i>0&&funnel[i-1].v>0?`<div class="mut2" style="font-size:11px;margin-top:3px">↓ ${Math.round((funnel[i-1].v-f.v)/funnel[i-1].v*100)}% drop from previous</div>`:''}
+        </div>`).join('')}
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <b>Watch-through drop-off</b><div class="mut2 fz12" style="margin-bottom:14px">% of viewers still watching</div>
+        <div class="chartwrap" style="height:110px">
+          ${drop.map(d=>`<div class="bar" style="height:${d.v}%;background:linear-gradient(180deg,var(--accent),#0c8f77)"><span>${d.v}%</span><small>${d.s}</small></div>`).join('')}
+        </div>
+        <div style="height:16px"></div>
+        <div class="muted fz12" style="margin-top:10px">💡 Most drop-off is after 50%. Your top card ("${topCard().title}") keeps ${topCard().watchPct}% watching — reuse that opener.</div>
+      </div>
+      <div class="card">
+        <b>Best lead sources</b><div class="mut2 fz12" style="margin-bottom:12px">Share of hot leads</div>
+        ${src.map(s=>`<div class="kv"><span>${s.s}</span><span style="display:flex;align-items:center;gap:10px"><span class="barmini" style="width:70px"><i style="width:${s.v/s.mxv*100}%;background:${s.c}"></i></span><b>${s.v}%</b></span></div>`).join('')}
+      </div>
+    </div>
+  </div>
+  <div class="sec-title">Card leaderboard</div>
+  <div class="card" style="padding:8px 18px">
+    ${[...S.cards].sort((a,b)=>b.watchPct-a.watchPct).map((c,i)=>`
+      <div class="row">
+        <div class="av">${i+1}</div>
+        <div style="flex:1"><div class="fw7 fz13">${c.title}</div><div class="mut2 fz12">${c.template} · ${c.created}</div></div>
+        <div class="fz12 muted" style="width:90px">👁 ${c.views.toLocaleString()}</div>
+        <div class="fz12 muted" style="width:70px">👆 ${c.clicks}</div>
+        <div style="width:120px"><div class="barmini"><i style="width:${c.watchPct}%;background:var(--brand2)"></i></div><div class="mut2 fz12" style="margin-top:4px">${c.watchPct}% watch</div></div>
+        <div class="fw7" style="color:var(--hot);width:50px;text-align:right">🔥 ${c.hot}</div>
+      </div>`).join('')}
+  </div>`;
+}
+/* ============ VIDEO STORE (IndexedDB) ============ */
+const VDB={db:null,
+  open(){return new Promise((res,rej)=>{
+    if(VDB.db)return res(VDB.db);
+    const r=indexedDB.open('legacytap_vids',1);
+    r.onupgradeneeded=()=>r.result.createObjectStore('v');
+    r.onsuccess=()=>{VDB.db=r.result;res(VDB.db);};
+    r.onerror=()=>rej(r.error);});},
+  async put(id,blob){const db=await VDB.open();return new Promise((res,rej)=>{
+    const tx=db.transaction('v','readwrite');tx.objectStore('v').put(blob,id);
+    tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});},
+  async get(id){const db=await VDB.open();return new Promise((res,rej)=>{
+    const rq=db.transaction('v').objectStore('v').get(id);
+    rq.onsuccess=()=>res(rq.result||null);rq.onerror=()=>rej(rq.error);});}
+};
+/* ============ VIDEO RECORDER ============ */
+let recStream=null,recorder=null,recChunks=[],recTimer=null,recSecs=0;
+function recUI(html){const w=$('#recwrap');if(w)w.innerHTML=html;}
+function drawRecIdle(){
+  recUI(`<div style="text-align:center;padding:16px 6px">
+    <div style="font-size:30px">🎥</div>
+    <div class="fw7" style="margin:8px 0 12px">Add your video</div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <button class="btn primary sm" onclick="startCam()">🎥 Record with camera</button>
+      <button class="btn sm" onclick="document.getElementById('recfile').click()">📁 Upload a clip</button>
+    </div>
+    <div class="muted fz12" style="margin-top:10px">MP4/MOV/WebM · under 90s recommended · videos stay on this device</div>
+  </div>`);
+}
+async function startCam(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('Camera not available in this browser','⚠️');return;}
+  try{recStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:true});}
+  catch(e){toast('Camera blocked — allow camera & mic access, then try again','⚠️');return;}
+  recUI(`<video id="recvid" autoplay muted playsinline></video>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn primary sm" style="flex:1;justify-content:center" onclick="startRec()">● Start recording</button>
+      <button class="btn sm ghost" onclick="stopCam();drawRecIdle()">Cancel</button>
+    </div>`);
+  const v=$('#recvid');if(v)v.srcObject=recStream;
+}
+function startRec(){
+  recChunks=[];recSecs=0;
+  try{recorder=new MediaRecorder(recStream);}
+  catch(e){toast('Recording not supported in this browser','⚠️');return;}
+  recorder.ondataavailable=e=>{if(e.data&&e.data.size)recChunks.push(e.data);};
+  recorder.onstop=()=>{
+    const blob=new Blob(recChunks,{type:recorder.mimeType||'video/webm'});
+    builder.videoBlob=blob;stopCam();showRecPlayback(blob);
+    toast('Recorded! Preview below, re-record if you like','🎥');
+  };
+  recorder.start();
+  recUI(`<video id="recvid" autoplay muted playsinline></video>
+    <div style="display:flex;gap:10px;margin-top:10px;align-items:center">
+      <span id="rectime" class="fw7" style="color:var(--hot);min-width:58px">● 0:00</span>
+      <button class="btn primary sm" style="flex:1;justify-content:center" onclick="stopRec()">■ Stop recording</button>
+    </div>`);
+  const v=$('#recvid');if(v)v.srcObject=recStream;
+  recTimer=setInterval(()=>{recSecs++;
+    const t=$('#rectime');if(t)t.textContent='● '+Math.floor(recSecs/60)+':'+String(recSecs%60).padStart(2,'0');
+    if(recSecs>=90){toast('90s cap reached — short videos convert best','⏱');stopRec();}},1000);
+}
+function stopRec(){clearInterval(recTimer);if(recorder&&recorder.state!=='inactive')recorder.stop();}
+function stopCam(){clearInterval(recTimer);
+  if(recorder&&recorder.state!=='inactive'){try{recorder.stop();}catch(e){}}
+  if(recStream){recStream.getTracks().forEach(t=>t.stop());recStream=null;}}
+function showRecPlayback(blob){
+  const url=URL.createObjectURL(blob);
+  recUI(`<video src="${url}" controls playsinline></video>
+    <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+      <span class="chip on" style="flex:1;justify-content:center">✅ Video attached · ${(blob.size/1048576).toFixed(1)} MB</span>
+      <button class="btn sm ghost" onclick="builder.videoBlob=null;drawRecIdle()">↺ Re-record</button>
+    </div>`);
+}
+function fileChosen(inp){
+  const f=inp.files[0];if(!f)return;
+  if(!f.type.startsWith('video/')){toast('Choose a video file (MP4/MOV/WebM)','⚠️');return;}
+  builder.videoBlob=f;showRecPlayback(f);inp.value='';
+}
+/* ============ CALLING ROUND ============ */
+let roundQ=[],roundI=0,roundRes=[];
+function startRound(){
+  roundQ=[...S.contacts].filter(c=>c.temp!=='cold').sort((a,b)=>b.score-a.score);
+  if(!roundQ.length){toast('No warm or hot leads to call right now','📞');return;}
+  roundI=0;roundRes=[];drawRound();openM();
+}
+function talkPts(c){
+  const p=[];
+  if(c.watchPct>=80)p.push('Watched '+c.watchPct+'% — high intent. Go straight to booking the appointment.');
+  else if(c.watchPct>0)p.push('Dropped off at '+c.watchPct+'% — re-hook with the rate-lock-before-birthday angle.');
+  else p.push('Hasn\'t opened the card yet — mention you sent a short video and offer to resend it.');
+  p.push('Last action: '+c.lastAct+' · '+ago(c.lastMin));
+  c.tags.forEach(t=>p.push(t));
+  return p;
+}
+function drawRound(){
+  if(roundI>=roundQ.length){
+    const n=k=>roundRes.filter(r=>r===k).length;
+    $('#modal').innerHTML=`
+      <div class="mh"><h3>Round complete 🏁</h3><button class="x" onclick="closeM()">✕</button></div>
+      <div class="mb" style="text-align:center">
+        <div class="grid g3" style="margin-bottom:16px">
+          <div class="card" style="padding:14px"><div class="mut2 fz12">📅 Booked</div><div class="fw7" style="font-size:24px;margin-top:4px;color:var(--good)">${n('booked')}</div></div>
+          <div class="card" style="padding:14px"><div class="mut2 fz12">🕐 Callbacks</div><div class="fw7" style="font-size:24px;margin-top:4px;color:var(--warm)">${n('callback')}</div></div>
+          <div class="card" style="padding:14px"><div class="mut2 fz12">📵 No answer</div><div class="fw7" style="font-size:24px;margin-top:4px;color:var(--mut)">${n('noanswer')}</div></div>
+        </div>
+        <p class="muted fz13">Every outcome is logged to the lead's timeline. No-answers can drop into "Cold Re-Engage" automatically.</p>
+        <button class="btn primary" style="width:100%;justify-content:center" onclick="closeM();view='leads';render()">Review leads</button>
+      </div>`;
+    render();return;
+  }
+  const c=roundQ[roundI];
+  $('#modal').innerHTML=`
+    <div class="mh"><h3>Calling round · ${roundI+1} of ${roundQ.length}</h3><button class="x" onclick="closeM()">✕</button></div>
+    <div class="mb">
+      <div style="display:flex;gap:16px;align-items:center">
+        <div class="av" style="width:56px;height:56px;font-size:19px;background:${tempColor(c.temp)}22;color:${tempColor(c.temp)}">${initials(c.name)}</div>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:9px"><b style="font-size:16px">${c.name}</b><span class="temp ${tempClass(c.temp)}">${c.temp}</span></div>
+          <div class="muted fz13" style="margin-top:3px">${c.age} · ${c.city} · ${c.source}</div>
+        </div>
+        <div style="text-align:center"><div class="score" style="font-size:26px;color:${tempColor(c.temp)}">${c.score}</div><div class="mut2 fz12">score</div></div>
+      </div>
+      <div class="card" style="margin:16px 0;text-align:center;padding:14px">
+        <div class="mut2 fz12">Dial</div><div class="fw7" style="font-size:22px;letter-spacing:.5px;margin-top:3px">${c.phone}</div>
+      </div>
+      <div class="muted fz12 fw7" style="margin-bottom:9px">Talking points</div>
+      ${talkPts(c).map(t=>`<div class="kv" style="justify-content:flex-start;gap:9px"><span>💡</span><span>${t}</span></div>`).join('')}
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:18px">
+        <button class="btn sm" style="justify-content:center;border-color:var(--good);color:#b8f5cd" onclick="dispo('booked')">📅 Booked</button>
+        <button class="btn sm" style="justify-content:center;border-color:var(--warm)" onclick="dispo('callback')">🕐 Callback</button>
+        <button class="btn sm" style="justify-content:center" onclick="dispo('noanswer')">📵 No answer</button>
+        <button class="btn sm ghost" style="justify-content:center" onclick="dispo('skip')">Skip →</button>
+      </div>
+    </div>`;
+}
+function dispo(kind){
+  const c=roundQ[roundI];
+  if(kind==='booked'){c.events.unshift({t:'📅 Booked on a calling round',m:1,hot:true});c.lastAct='Booked a call';c.lastMin=1;c.score=Math.min(99,c.score+10);c.temp='hot';toast(c.name.split(' ')[0]+' booked! 🎉','📅');}
+  if(kind==='callback'){c.events.unshift({t:'Asked for a callback',m:1});c.lastAct='Callback requested';c.lastMin=1;}
+  if(kind==='noanswer'){c.events.unshift({t:'Called — no answer',m:1});c.lastAct='No answer';c.lastMin=1;c.score=Math.max(5,c.score-3);}
+  if(kind!=='skip')save();
+  roundRes.push(kind);roundI++;drawRound();
+}
+/* ============ ADD LEAD ============ */
+function openAddLead(){
+  $('#modal').innerHTML=`
+    <div class="mh"><h3>Add leads</h3><button class="x" onclick="closeM()">✕</button></div>
+    <div class="mb">
+      <div class="grid g2" style="margin-bottom:6px">
+        <div class="tmpl" onclick="toast('Facebook Lead Ads connector — auto-imports new leads in real time','📥')"><b>📘 Facebook Lead Ads</b><p>Auto-import every new lead the moment the form is submitted.</p></div>
+        <div class="tmpl" onclick="toast('CSV import — map name, phone, age and source columns','📥')"><b>📄 CSV upload</b><p>Bring in a direct-mail or aged-lead list in one shot.</p></div>
+      </div>
+      <label class="fl">Or add one by hand</label>
+      <input class="in" id="al_name" placeholder="Full name">
+      <div class="grid g2" style="margin-top:10px">
+        <input class="in" id="al_age" placeholder="Age" inputmode="numeric">
+        <input class="in" id="al_phone" placeholder="Phone">
+      </div>
+      <input class="in" id="al_city" placeholder="City, State" style="margin-top:10px">
+      <select class="in" id="al_src" style="margin-top:10px">
+        <option>Facebook Lead</option><option>Direct Mail</option><option>Referral</option><option>Cold List</option>
+      </select>
+      <div style="display:flex;gap:10px;margin-top:18px">
+        <button class="btn primary" style="flex:1;justify-content:center" onclick="addLead()">Add lead &amp; queue first card</button>
+        <button class="btn ghost" onclick="closeM()">Cancel</button>
+      </div>
+    </div>`;
+  openM();setTimeout(()=>$('#al_name')&&$('#al_name').focus(),50);
+}
+function addLead(){
+  const name=$('#al_name').value.trim();
+  if(!name){toast('Give the lead a name first','⚠️');return;}
+  const c={id:'c'+Date.now(),name,age:parseInt($('#al_age').value)||67,city:$('#al_city').value.trim()||'—',phone:$('#al_phone').value.trim()||'—',score:22,temp:'cold',source:$('#al_src').value,watched:0,replays:0,watchPct:0,clicks:0,lastAct:'Just added',lastMin:1,tags:['New lead'],events:[{t:'Lead added',day:S.simDay,min:2}]};
+  S.contacts.push(c);
+  const seq=activeAutos().find(a=>trigKind(a)==='new');
+  let sent=false;
+  if(seq){assignAuto(c,seq);const r=stepContact(c);if(r&&r.sent)sent=true;}
+  save();closeM();leadFilter='all';view='leads';render();
+  toast(seq?`${name.split(' ')[0]} added — enrolled in "${seq.name}"${sent?', first touch sent ⚡':''}`:`${name.split(' ')[0]} added — turn on a sequence to auto-nurture`,'✅');
+}
+/* ============ SEQUENCE BUILDER (editable) ============ */
+const TRIGGERS={new:'New lead added',watched:'Watched ≥ 80%, no booking',quote:'Quote sent',noopen:'No open after 7 days'};
+const SEQ_GOALS=[
+  {id:'g1',name:'Nurture brand-new leads',desc:'Intro card → reminder → hot-lead nudge.',steps:[
+    {type:'trig',trig:'new'},
+    {type:'act',channel:'sms',cardId:'k2',msg:'Hi {first}, quick 90-second video on what final expense actually covers — no pressure.'},
+    {type:'wait',days:2,cond:'notWatched'},
+    {type:'act',channel:'sms',cardId:null,msg:'Just making sure my quick video reached you, {first} — 90 seconds, that\'s it.'},
+    {type:'wait',days:2,cond:'watched'},
+    {type:'act',channel:'sms',cardId:'k1',msg:'Looks like this is on your mind 🙌 want me to run your exact rate? Tap to grab a time.'}]},
+  {id:'g2',name:'Revive cold leads',desc:'New hook + channel switch after quiet days.',steps:[
+    {type:'trig',trig:'noopen'},
+    {type:'act',channel:'sms',cardId:'k2',msg:'Different angle, {first} — 30-second story from a family we helped last month.'},
+    {type:'wait',days:3,cond:'notWatched'},
+    {type:'act',channel:'email',cardId:null,msg:'Last note from me — if the timing\'s wrong just say so and I\'ll stop reaching out.'}]},
+  {id:'g3',name:'Post-quote follow-up',desc:'Keep quoted prospects warm until they sign.',steps:[
+    {type:'trig',trig:'quote'},
+    {type:'act',channel:'sms',cardId:'k3',msg:'Here\'s a recap of your numbers, {first} — locking before your birthday keeps the rate down.'},
+    {type:'wait',days:2,cond:'notWatched'},
+    {type:'act',channel:'sms',cardId:'k3',msg:'Rates tick up on your next birthday — want me to lock today\'s number in?'}]}
+];
+function condLabel(c){return c==='notWatched'?'if not watched':c==='watched'?'if watched ≥ 70%':'';}
+function trigTitle(t){return 'Trigger: '+(TRIGGERS[t]||TRIGGERS.new);}
+function trigDesc(t){return t==='new'?'Fires on import or manual add.':t==='watched'?'High intent, no next step taken yet.':t==='quote'?'Fires right after a quote goes out.':'Lead has gone quiet — time to re-engage.';}
+function waitTitle(s){const d=s.days||0;return 'Wait '+d+' day'+(d===1?'':'s')+(s.cond&&s.cond!=='any'?' — '+condLabel(s.cond):'');}
+function actTitle(s,card){if(card)return 'Send video card: '+card.title;return s.channel==='email'?'Send follow-up email':'Send reminder text';}
+let seqDraft=null;
+function openSeqBuilder(){
+  seqDraft={editingId:null,name:'',steps:[{type:'trig',trig:'new'},{type:'act',channel:'sms',cardId:'k2',msg:'Hi {first}, quick 90-second video for you — no pressure.'}]};
+  renderSeqBuilder();openM();
+}
+function editSeq(id){
+  const a=S.autos.find(x=>x.id===id);
+  seqDraft={editingId:id,name:a.name,steps:a.steps.map(s=>{
+    if(s.type==='trig')return {type:'trig',trig:s.trig||trigKind(a)};
+    if(s.type==='wait')return {type:'wait',days:waitDaysOf(s),cond:s.cond||(/not watch/i.test(s.title)?'notWatched':/watch/i.test(s.title)?'watched':'any')};
+    const card=cardOf(s);return {type:'act',channel:channelOf(s),cardId:card?card.id:null,msg:s.msg||s.desc||s.title};
+  })};
+  renderSeqBuilder();openM();
+}
+function fillGoal(id){const g=SEQ_GOALS.find(x=>x.id===id);seqDraft.name=g.name;seqDraft.steps=g.steps.map(s=>({...s}));renderSeqBuilder();}
+function sdAdd(kind){const s=kind==='wait'?{type:'wait',days:2,cond:'any'}:{type:'act',channel:'sms',cardId:null,msg:''};seqDraft.steps.push(s);renderSeqBuilder();}
+function sdDel(i){if(seqDraft.steps[i].type==='trig')return;seqDraft.steps.splice(i,1);renderSeqBuilder();}
+function sdMove(i,dir){const j=i+dir;if(j<1||j>=seqDraft.steps.length)return;/* keep trigger at 0 */const t=seqDraft.steps[i];seqDraft.steps[i]=seqDraft.steps[j];seqDraft.steps[j]=t;renderSeqBuilder();}
+function sdSet(i,k,v){seqDraft.steps[i][k]=(k==='cardId'&&v==='')?null:v;renderSeqBuilder();}
+function stepEditor(s,i,len){
+  const card=s.type==='act'&&s.cardId?S.cards.find(k=>k.id===s.cardId):null;
+  const kindIcon=s.type==='trig'?'⚡':s.type==='wait'?'⏳':'✦';
+  let inner='';
+  if(s.type==='trig'){
+    inner=`<span class="tag">Trigger — when a lead enters</span>
+      <select class="in sm" onchange="sdSet(${i},'trig',this.value)">${Object.keys(TRIGGERS).map(t=>`<option value="${t}"${s.trig===t?' selected':''}>${TRIGGERS[t]}</option>`).join('')}</select>`;
+  }else if(s.type==='wait'){
+    inner=`<span class="tag">Wait / condition</span>
+      <div class="row2"><div><input class="in sm" type="number" min="0" value="${s.days}" oninput="seqDraft.steps[${i}].days=parseInt(this.value)||0"> </div>
+      <select class="in sm" onchange="sdSet(${i},'cond',this.value)">
+        <option value="any"${s.cond==='any'?' selected':''}>days — any time</option>
+        <option value="notWatched"${s.cond==='notWatched'?' selected':''}>days — only if NOT watched</option>
+        <option value="watched"${s.cond==='watched'?' selected':''}>days — only if watched ≥ 70%</option>
+      </select></div>`;
+  }else{
+    inner=`<span class="tag">Action — send a touch</span>
+      <div class="row2">
+        <select class="in sm" onchange="sdSet(${i},'channel',this.value)"><option value="sms"${s.channel==='sms'?' selected':''}>💬 SMS</option><option value="email"${s.channel==='email'?' selected':''}>✉ Email</option></select>
+        <select class="in sm" onchange="sdSet(${i},'cardId',this.value)"><option value=""${!s.cardId?' selected':''}>Plain text (no card)</option>${S.cards.map(k=>`<option value="${k.id}"${s.cardId===k.id?' selected':''}>🎥 ${k.title}</option>`).join('')}</select>
+      </div>
+      <textarea class="in sm" style="min-height:56px;margin-top:7px" placeholder="Message copy — use {first} for first name" oninput="seqDraft.steps[${i}].msg=this.value">${(s.msg||'').replace(/</g,'&lt;')}</textarea>`;
+  }
+  return `<div class="stepedit">
+    <div class="kind ${s.type}">${kindIcon}</div>
+    <div class="grow">${inner}</div>
+    <div class="mv">
+      ${s.type!=='trig'?`<button class="minibtn" title="Move up" onclick="sdMove(${i},-1)">▲</button><button class="minibtn" title="Move down" onclick="sdMove(${i},1)">▼</button><button class="minibtn" title="Delete" onclick="sdDel(${i})">✕</button>`:'<span class="mut2 fz12" style="writing-mode:vertical-rl">start</span>'}
+    </div>
+  </div>`;
+}
+function renderSeqBuilder(){
+  const d=seqDraft;const acts=d.steps.filter(s=>s.type==='act').length;
+  $('#modal').innerHTML=`
+    <div class="mh"><h3>${d.editingId?'Edit sequence':'New sequence'}</h3><button class="x" onclick="closeM()">✕</button></div>
+    <div class="mb">
+      ${!d.editingId?`<div class="mut2 fz12 fw7" style="margin:0 0 8px">Quick-start from a goal (then tweak)</div>
+      <div class="grid g3" style="margin-bottom:16px">${SEQ_GOALS.map(g=>`<div class="tmpl" onclick="fillGoal('${g.id}')"><b>${g.name}</b><p>${g.desc}</p></div>`).join('')}</div>`:''}
+      <label class="fl">Sequence name</label>
+      <input class="in" id="sd_name" placeholder="e.g. New Lead — 5-Touch Nurture" value="${(d.name||'').replace(/"/g,'&quot;')}" oninput="seqDraft.name=this.value">
+      <label class="fl">Steps — runs top to bottom</label>
+      ${d.steps.map((s,i)=>stepEditor(s,i,d.steps.length)).join('')}
+      <div class="addrow">
+        <button class="btn sm" onclick="sdAdd('act')">＋ Add action (send)</button>
+        <button class="btn sm" onclick="sdAdd('wait')">＋ Add wait / condition</button>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:18px">
+        <button class="btn ghost" style="flex:1;justify-content:center" onclick="closeM()">Cancel</button>
+        <button class="btn primary" style="flex:2;justify-content:center" onclick="saveSeq()">${d.editingId?'Save changes':'Save sequence'} (${acts} touch${acts===1?'':'es'})</button>
+      </div>
+    </div>`;
+}
+function saveSeq(){
+  const d=seqDraft;
+  if(!d.steps.some(s=>s.type==='act')){toast('Add at least one action so the sequence can send something','⚠️');return;}
+  const nm=(d.name||'').trim()||'Untitled sequence';
+  const steps=d.steps.map(s=>{
+    if(s.type==='trig')return {type:'trig',trig:s.trig,title:trigTitle(s.trig),desc:trigDesc(s.trig)};
+    if(s.type==='wait')return {type:'wait',days:s.days,cond:s.cond,title:waitTitle(s),desc:''};
+    const card=s.cardId?S.cards.find(k=>k.id===s.cardId):null;
+    return {type:'act',channel:s.channel,cardId:s.cardId,msg:s.msg,title:actTitle(s,card),desc:s.msg||''};
+  });
+  if(d.editingId){const a=S.autos.find(x=>x.id===d.editingId);a.name=nm;a.steps=steps;}
+  else{S.autos.unshift({id:'a'+Date.now(),name:nm,active:false,sent:0,replies:0,enrolled:0,reply:'—',steps});}
+  const wasEdit=d.editingId;seqDraft=null;save();closeM();view='auto';render();
+  toast(wasEdit?'Sequence updated ✎':'Sequence saved — flip it on to start sending ⚡','⚡');
+}
+/* ============ MODAL ============ */
+function openM(){$('#overlay').classList.add('on');}
+function closeM(){stopCam();$('#overlay').classList.remove('on');}
+$('#overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeM();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeM();});
+if(!S.seededEnroll){try{bootstrapEnroll();save();}catch(e){}}
+render();
+</script>
+</body>
+</html>
