@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Your video follow-up | LegacyTap</title>
+<style>
+:root{color-scheme:light;background:#eef3f9;color:#12213d;font:18px/1.55 system-ui,sans-serif}
+*{box-sizing:border-box}body{margin:0}main{width:min(100% - 1.5rem,37rem);margin:clamp(.75rem,5vw,3rem) auto;background:white;padding:clamp(1rem,4vw,2rem);border-radius:1.1rem;border:1px solid #cbd7e7}
+.brand{font-weight:750;color:#244e99}h1{font-size:clamp(1.75rem,6vw,2.5rem);line-height:1.1;overflow-wrap:anywhere}video{display:block;width:100%;max-height:62vh;background:#12213d;border-radius:.6rem}button{display:block;margin:1rem 0;width:100%;min-height:3rem;background:#17449b;color:white;border:0;border-radius:.5rem;font:700 1.1rem system-ui;cursor:pointer}button:disabled{opacity:.7}summary{cursor:pointer;font-weight:700}#transcript{white-space:pre-wrap;overflow-wrap:anywhere}a:focus-visible,button:focus-visible,summary:focus-visible,video:focus-visible{outline:3px solid #8c480b;outline-offset:4px}
+</style>
+<script src="/recipient.js" defer></script>
+</head>
+<body>
+<main>
+<p class="brand">LegacyTap</p>
+<h1 id="headline">Your video follow-up</h1>
+<p id="status" role="status" aria-live="polite">Loading video…</p>
+<div id="content" hidden>
+<video id="video" controls playsinline preload="metadata" aria-label="Video follow-up"></video>
+<button id="callback" type="button" aria-describedby="callback-note">Request a call</button>
+<p id="callback-note">This lets the person who sent you this card know you’d like a call.</p>
+<details><summary>Read the transcript</summary><p id="transcript"></p></details>
+</div>
+</main>
+</body>
+</html>
