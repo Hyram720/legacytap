@@ -219,6 +219,25 @@
     .g4{grid-template-columns:repeat(2,1fr)}
     .g3,.g2,.split{grid-template-columns:1fr}
   }
+.hosted-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:12px}
+.hosted-heading{justify-content:space-between;margin-top:0}
+.hosted-heading h3{margin:0}
+.hosted-queue{margin-bottom:22px}
+#hosted-queue-list{list-style:none;padding:0;margin:0}
+#hosted-queue-list li{padding:12px 0;border-top:1px solid var(--line)}
+#hosted-queue-list button{margin-left:10px}
+.builder-step{margin:0 0 14px;font-weight:700}
+.builder-actions{position:sticky;bottom:0;background:var(--panel,#121a30);padding:12px 0;z-index:1}
+.builder-template{width:100%;text-align:left}
+@media(max-width:600px){
+  .topbar{align-items:stretch;flex-direction:column}
+  .topbar .btn{white-space:normal}
+  .app{grid-template-columns:minmax(0,1fr)}
+  .main,.side,.split>*{min-width:0}
+  .side{flex-wrap:wrap;overflow:visible}
+  .side .nav{width:100%;min-width:0;overflow-x:auto;scrollbar-width:thin}
+  .side .nav button{flex:0 0 auto;width:auto}
+}
 </style>
 </head>
 <body>
@@ -235,16 +254,12 @@
       <button data-view="auto"><span class="ic">⚡</span> Automations</button>
       <button data-view="analytics"><span class="ic">▤</span> Analytics</button>
     </nav>
-    <div class="up">
-      <b>You're on Free Trial</b>
-      <p>4 days left. Unlock unlimited cards, AI scripts &amp; team seats.</p>
-      <button onclick="toast('Upgrade flow — wire to Stripe next 🚀')">Upgrade to Pro</button>
-    </div>
   </aside>
   <main class="main" id="main"></main>
 </div>
-<div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+<div class="overlay" id="overlay"><div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="LegacyTap dialog"></div></div>
 <div class="toast" id="toast"><span class="ic">✅</span><span id="toastmsg"></span></div>
+<script src="/hosted.js"></script>
 <script>
 /* ============ STATE ============ */
 const KEY='legacytap_v2';
@@ -320,7 +335,7 @@ function seed(){
 let S=load();
 function load(){try{const d=JSON.parse(localStorage.getItem(KEY));if(d&&d.contacts){d.simDay=d.simDay||0;d.outbox=d.outbox||[];if(d.seededEnroll===undefined)d.seededEnroll=false;return d;}return seed();}catch(e){return seed();}}
 function save(){localStorage.setItem(KEY,JSON.stringify(S));}
-function reset(){if(confirm('Reset all demo data back to the seeded example?')){S=seed();save();render();toast('Demo data reset');}}
+function reset(){if(confirm('Reset simulated data? Your saved cards will be kept.')){const savedCards=S.cards.filter(card=>card.template==='Custom');S=seed();S.cards.unshift(...savedCards);save();render();toast('Demo data reset');}}
 /* ============ HELPERS ============ */
 const $=s=>document.querySelector(s);
 const el=(h)=>{const d=document.createElement('div');d.innerHTML=h.trim();return d.firstChild;};
@@ -337,11 +352,11 @@ let view='dash';
 function render(){
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
   const m=$('#main');
-  if(view==='dash')m.innerHTML=vDash();
+  if(view==='dash'){m.innerHTML=vDash();loadHostedQueue();}
   else if(view==='cards')m.innerHTML=vCards();
-  else if(view==='leads')m.innerHTML=vLeads();
-  else if(view==='auto')m.innerHTML=vAuto();
-  else if(view==='analytics')m.innerHTML=vAnalytics();
+  else if(view==='leads')m.innerHTML='<p class="muted">Demo leads and scoring.</p>'+vLeads();
+  else if(view==='auto')m.innerHTML='<p class="muted">Demo automations. Messages are simulated.</p>'+vAuto();
+  else if(view==='analytics')m.innerHTML='<p class="muted">Demo analytics. Use the callback queue for hosted-card activity.</p>'+vAnalytics();
   m.classList.remove('fade');void m.offsetWidth;m.classList.add('fade');
   m.scrollTop=0;window.scrollTo(0,0);
 }
@@ -351,20 +366,20 @@ function vDash(){
   const totalViews=sum(S.cards.map(c=>c.views));
   const totalClicks=sum(S.cards.map(c=>c.clicks));
   const hot=S.contacts.filter(c=>c.temp==='hot').length;
-  const avgWatch=Math.round(sum(S.cards.map(c=>c.watchPct))/S.cards.length);
+  const avgWatch=Math.round(sum(S.cards.map(c=>c.watchPct))/(S.cards.length||1));
   const wk=S.weekly, mx=Math.max(...wk)||1, days=['M','T','W','T','F','S','S'];
   const hotLeads=[...S.contacts].filter(c=>c.temp==='hot').sort((a,b)=>b.score-a.score);
-  const warmHot=S.contacts.filter(c=>c.temp!=='cold').length;
-  const asked=askedToTalk();
   const vwS=trend(totalViews),tapS=trend(totalClicks),watS=trend(avgWatch),hotS=trend(hot);
   return `
   <div class="topbar">
-    <div class="title"><h2>Good morning, Fred 👋</h2><p>${warmHot} lead${warmHot===1?' is':'s are'} warm right now — ${asked} asked to talk. Here's where to spend your next hour.</p></div>
+    <div class="title"><h2>Video follow-ups</h2><p>Create a card or check who requested a callback.</p></div>
     <div style="display:flex;gap:10px">
       <button class="btn ghost sm" onclick="reset()">↺ Reset demo</button>
       <button class="btn primary" onclick="openBuilder()">＋ New Video Card</button>
     </div>
   </div>
+  ${hostedDashboard()}
+  <div class="sec-title">Demo analytics <span class="pill">Simulated activity</span></div>
   <div class="grid g4">
     ${statCard('Card Views (7d)',totalViews.toLocaleString(),totalViews>0?fpc(deltaPct(vwS)):'—',deltaPct(vwS)>=0,spark(vwS))}
     ${statCard('Button Taps',totalClicks.toLocaleString(),totalClicks>0?fpc(deltaPct(tapS)):'—',deltaPct(tapS)>=0,spark(tapS))}
@@ -382,9 +397,9 @@ function vDash(){
       </div>
       <div style="height:20px"></div>
       <div class="grid g3" style="margin-top:14px">
-        <div><div class="muted fz12 fw7">Best card</div><div style="margin-top:5px">${topCard().title} — <b>${topCard().watchPct}%</b> watch</div></div>
-        <div><div class="muted fz12 fw7">Best send time</div><div style="margin-top:5px">Tue &amp; Thu, <b>6–8pm</b></div></div>
-        <div><div class="muted fz12 fw7">Reply rate</div><div style="margin-top:5px"><b>${replyRate()}%</b> vs 11% for plain text</div></div>
+        <div><div class="muted fz12 fw7">Best card</div><div style="margin-top:5px">${escapeHtml(topCard().title)} — <b>${topCard().watchPct}%</b> watch</div></div>
+
+        <div><div class="muted fz12 fw7">Reply rate</div><div style="margin-top:5px"><b>${replyRate()}%</b></div></div>
       </div>
     </div>
     <div class="card">
@@ -403,19 +418,14 @@ function vDash(){
       <button class="btn sm" style="width:100%;margin-top:12px;justify-content:center" onclick="startRound()">📞 Start calling round</button>
     </div>
   </div>
-  <div class="sec-title">Live activity <span class="pill">TapAlerts</span></div>
+  <div class="sec-title">Demo activity <span class="pill">Simulated</span></div>
   <div class="card">
     <div class="tl" style="margin-top:4px">
       ${S.contacts.flatMap(c=>c.events.map(e=>({n:c.name,id:c.id,t:e.t,m:evMin(e),hot:e.hot}))).sort((a,b)=>a.m-b.m).slice(0,7).map(e=>`
         <div class="ev ${e.hot?'hot':''}" style="cursor:pointer" onclick="openLead('${e.id}')"><b>${e.n}</b> — ${e.t} <span>· ${ago(e.m)}</span></div>`).join('')}
     </div>
   </div>
-  <div class="sec-title">Why LegacyTap beats a plain follow-up <span class="pill">Final Expense built-in</span></div>
-  <div class="grid g3">
-    ${feat('🎯','Niche templates &amp; scripts','Rate-lock, beneficiary, and "what it covers" cards written for FE prospects — compliant, senior-friendly language.')}
-    ${feat('⚡','Automations that follow up for you','Multi-touch sequences with watched / no-response branches so no warm lead ever cools off.')}
-    ${feat('📊','Scoring you can act on','Every open, replay and drop-off feeds a 0–100 lead score — you always know who to call next.')}
-  </div>`;
+`;
 }
 function statCard(lab,val,delta,up,sp){
   return `<div class="card stat"><div class="lab">${lab}</div><div class="val">${val}</div>
@@ -449,7 +459,7 @@ function fpt(d){return (d>=0?'+':'')+d+' pts';}
 function vCards(){
   return `
   <div class="topbar">
-    <div class="title"><h2>Video Cards</h2><p>Personal video follow-ups with tap buttons. Share by text, DM, or email.</p></div>
+    <div class="title"><h2>Video Cards</h2><p>Create a video follow-up and copy the published link to share manually.</p></div>
     <button class="btn primary" onclick="openBuilder()">＋ New Video Card</button>
   </div>
   <div class="grid g3">
@@ -461,7 +471,8 @@ function vCards(){
           <div class="play">▶</div>
         </div>
         <div class="meta">
-          <h4>${c.title}</h4>
+          <h4>${escapeHtml(c.title)}</h4>
+          ${c.hasVideo?'<button type="button" class="btn sm" onclick="event.stopPropagation();openHostedCard(\''+c.id+'\')">Share card</button>':''}
           <div class="mut2 fz12">${c.buttons.join(' · ')}</div>
           <div class="st">
             <span>👁 ${c.views.toLocaleString()}</span>
@@ -478,100 +489,86 @@ function vCards(){
 }
 /* ============ BUILDER ============ */
 const FE_TEMPLATES=[
-  {id:'t1',name:'Cold lead intro',hook:'Final Expense — what it actually covers',script:'Hi {first}, this is Fred with Sun Marketing. In 60 seconds I\'ll show you exactly what a final expense plan covers and roughly what folks your age are paying — no pressure, just so you have the facts.',buttons:['Book a Call','Request Quote','Save Contact']},
-  {id:'t2',name:'After the quote call',hook:'Quick follow-up on your plan',script:'Hi {first}, great talking with you. Here\'s the short version of the plan we discussed and your next step — tap below whenever you\'re ready and I\'ll take care of the rest.',buttons:['Book a Call','Request Quote','Save Contact']},
-  {id:'t3',name:'Rate lock urgency',hook:'Locking your rate before your birthday',script:'Hi {first}, quick heads up — final expense rates step up on your next birthday. If we lock it in beforehand you keep the lower rate for life. Takes about 4 minutes.',buttons:['Book a Call','Request Quote']},
-  {id:'t4',name:'Beneficiary check-in',hook:'Making sure your family is set',script:'Hi {first}, just making sure the people you love are protected and know the plan. Tap "Book a Call" and we\'ll button up the details together.',buttons:['Book a Call','Save Contact']},
-  {id:'t5',name:'Mortgage Protection — new homeowner',hook:'Protecting your home if something happens to you',script:'Hi {first}, congratulations on the new home! Quick 60-second video — if anything ever happened to you, mortgage protection makes sure your family keeps the house, not the payments. Let me show you what it looks like for your loan.',buttons:['Book a Call','Request Quote','Save Contact'],pack:'Mortgage Protection'},
-  {id:'t6',name:'Mortgage Protection — return of premium',hook:'Coverage that pays you back if you don\'t use it',script:'Hi {first}, most folks don\'t know mortgage protection can come with return-of-premium — if you never use it, you get your money back. Here\'s how it works on a loan like yours. Takes 4 minutes to run your exact number.',buttons:['Book a Call','Request Quote'],pack:'Mortgage Protection'},
-  {id:'t7',name:'Mortgage Protection — lender letter follow-up',hook:'That letter from your lender — here\'s the plain-English version',script:'Hi {first}, you may have gotten a notice about protecting your mortgage. I put together a quick video that explains what\'s real, what to ignore, and what actual coverage costs for your age and loan — no pressure at all.',buttons:['Book a Call','Request Quote','Save Contact'],pack:'Mortgage Protection'}
+  {name:'Intro to final expense',hook:'A quick introduction to final expense coverage',script:'Hi, I recorded a short introduction to final expense coverage. If you have questions, tap Request a call.'},
+  {name:'After the quote call',hook:'Following up on our conversation',script:'Thanks for speaking with me. I wanted to follow up on our conversation and offer to answer any questions.'},
+  {name:'Beneficiary check-in',hook:'A quick beneficiary check-in',script:'I wanted to check whether you have any questions about reviewing your beneficiary choices. Tap Request a call if you would like to discuss.'}
 ];
-let builder={title:'',hook:'',script:'',buttons:['Book a Call','Request Quote','Save Contact'],color:'#1b2f6b',videoBlob:null};
-const ALL_BTNS=['Book a Call','Request Quote','Save Contact','Visit Site','Text Me','Beneficiary Info'];
+let builder={};
 function openBuilder(){
-  builder={title:'',hook:'',script:'',buttons:['Book a Call','Request Quote','Save Contact'],color:'#1b2f6b',videoBlob:null};
-  const c=$('#modal');
-  c.innerHTML=`
-    <div class="mh"><h3>Create a Video Card</h3><button class="x" onclick="closeM()">✕</button></div>
-    <div class="mb">
-      <div class="muted fz12 fw7" style="margin-bottom:6px">1 · Start from a Final Expense template</div>
-      <div class="grid g2">
-        ${FE_TEMPLATES.map(t=>`<div class="tmpl" onclick="applyTmpl('${t.id}')"><b>${t.name}</b><p>${t.hook}</p></div>`).join('')}
-      </div>
-      <label class="fl">2 · Record or upload your video</label>
-      <div class="card recwrap" id="recwrap" style="border-style:dashed;padding:12px"></div>
-      <input type="file" id="recfile" accept="video/*" style="display:none" onchange="fileChosen(this)">
-      <label class="fl">Card title (internal)</label>
-      <input class="in" id="b_title" placeholder="e.g. Quick follow-up for Dorothy" oninput="builder.title=this.value">
-      <label class="fl">On-card headline (what the prospect sees)</label>
-      <input class="in" id="b_hook" placeholder="e.g. Final Expense — what it actually covers" oninput="builder.hook=this.value">
-      <label class="fl">Video script / opener <span class="mut2" style="font-weight:600">— AI-drafted, senior-friendly</span></label>
-      <textarea class="in" id="b_script" placeholder="Your talking points..." oninput="builder.script=this.value"></textarea>
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <button class="btn sm ghost" onclick="aiRewrite('warmer')">✨ Warmer</button>
-        <button class="btn sm ghost" onclick="aiRewrite('urgency')">✨ Add urgency</button>
-        <button class="btn sm ghost" onclick="aiRewrite('shorter')">✨ Shorter</button>
-      </div>
-      <label class="fl">3 · Tap buttons</label>
-      <div class="chipset" id="b_btns"></div>
-      <div class="chipset" id="b_addbtns" style="margin-top:10px"></div>
-      <label class="fl">Card color</label>
-      <div class="chipset">${['#1b2f6b','#12463c','#4a2a5e','#5e3a1f','#1f2937'].map(col=>`<div onclick="builder.color='${col}';drawBuilder()" style="width:34px;height:34px;border-radius:9px;cursor:pointer;background:linear-gradient(135deg,${col},#0a1128);box-shadow:inset 0 0 0 2px ${builder.color===col?'var(--brand2)':'transparent'}"></div>`).join('')}</div>
-      <div style="display:flex;gap:10px;margin-top:22px">
-        <button class="btn primary" style="flex:1;justify-content:center" onclick="saveCard()">Create card &amp; get share link</button>
-        <button class="btn ghost" onclick="closeM()">Cancel</button>
-      </div>
-    </div>`;
-  drawBuilder();drawRecIdle();openM();
-  setTimeout(()=>$('#b_title')&&$('#b_title').focus(),50);
-}
-function drawBuilder(){
-  const on=$('#b_btns'),add=$('#b_addbtns');if(!on)return;
-  on.innerHTML=builder.buttons.map(b=>`<span class="chip on">${b} <span class="rm" style="cursor:pointer" onclick="rmBtn('${b}')">✕</span></span>`).join('')||'<span class="mut2 fz12">No buttons yet — add some below</span>';
-  add.innerHTML=ALL_BTNS.filter(b=>!builder.buttons.includes(b)).map(b=>`<span class="chip" style="cursor:pointer" onclick="addBtn('${b}')">＋ ${b}</span>`).join('');
-}
-function addBtn(b){if(builder.buttons.length>=4){toast('4 buttons max keeps it senior-friendly','⚠️');return;}builder.buttons.push(b);drawBuilder();}
-function rmBtn(b){builder.buttons=builder.buttons.filter(x=>x!==b);drawBuilder();}
-function applyTmpl(id){const t=FE_TEMPLATES.find(x=>x.id===id);builder.hook=t.hook;builder.script=t.script;builder.buttons=[...t.buttons];builder.title=builder.title||t.name;
-  $('#b_hook').value=t.hook;$('#b_script').value=t.script;if(!$('#b_title').value)$('#b_title').value=t.name;builder.title=$('#b_title').value;drawBuilder();toast('Template loaded — tweak the script & record','📝');}
-function aiRewrite(mode){
-  let s=$('#b_script').value||'Hi {first}, this is Fred with Sun Marketing.';
-  if(mode==='warmer')s='Hi {first}, it\'s Fred — I really enjoyed our chat. I put together a quick 60-second video just for you so everything\'s crystal clear. No rush at all, watch whenever you get a minute. 💙';
-  if(mode==='urgency')s=(s.replace(/\s*$/,''))+' One quick note — rates tick up on your next birthday, so locking this in soon keeps you at today\'s price for life.';
-  if(mode==='shorter')s='Hi {first}, Fred here — 30-second video showing exactly what your plan covers and your next step. Tap below when ready.';
-  $('#b_script').value=s;builder.script=s;toast('AI rewrote your opener ✨','✨');
-}
-function saveCard(){
-  if(!builder.title&&!builder.hook){toast('Add a title or headline first','⚠️');return;}
-  const id='k'+Date.now();
-  const card={id,title:builder.title||builder.hook,template:'Custom',views:0,uniq:0,clicks:0,watchPct:0,hot:0,created:'just now',buttons:builder.buttons,color:builder.color,hook:builder.hook,script:builder.script};
-  if(builder.videoBlob){card.hasVideo=true;VDB.put(id,builder.videoBlob).catch(()=>{});}
-  S.cards.unshift(card);save();closeM();view='cards';render();
-  setTimeout(()=>openShare(id),250);
-}
-function openShare(id){
-  const c=S.cards.find(x=>x.id===id);
-  const link='legacytap.app/c/'+(c.title||'card').toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,24);
-  $('#modal').innerHTML=`
-    <div class="mh"><h3>Your card is live 🎉</h3><button class="x" onclick="closeM()">✕</button></div>
-    <div class="mb" style="text-align:center">
-      <p class="muted" style="margin-top:0">Share it anywhere — opens instantly on any phone, no app or download.</p>
-      <div class="in" style="display:flex;align-items:center;gap:10px;justify-content:space-between;text-align:left">
-        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">https://${link}</span>
-        <button class="btn sm primary" onclick="navigator.clipboard&&navigator.clipboard.writeText('https://${link}');toast('Link copied 📋')">Copy</button>
-      </div>
-      <div class="grid g4" style="margin-top:16px">
-        ${['iMessage','WhatsApp','Email','QR Code'].map(ch=>`<button class="btn" style="flex-direction:column;gap:8px;padding:16px 6px" onclick="toast('${ch} share sheet would open')"><span style="font-size:22px">${ch==='iMessage'?'💬':ch==='WhatsApp'?'🟢':ch==='Email'?'✉️':'▦'}</span><span class="fz12">${ch}</span></button>`).join('')}
-      </div>
-      <div class="card" style="margin-top:16px;text-align:left;display:flex;gap:12px;align-items:center">
-        <div style="font-size:22px">⚡</div>
-        <div style="flex:1"><b class="fz13">Enroll in "New Lead — 5-Touch Nurture"?</b><div class="muted fz12">We'll auto-send reminders and alert you the moment they watch.</div></div>
-        <button class="btn sm primary" onclick="closeM();view='auto';render();toast('Ready to enroll leads ⚡')">Set up</button>
-      </div>
-      <button class="btn" style="width:100%;justify-content:center;margin-top:14px" onclick="openPreview('${id}')">Preview recipient view</button>
-    </div>`;
+  builder={step:1,title:'',hook:'',script:'',videoBlob:null};
+  showBuilder();
   openM();
 }
+function showBuilder(){
+  const step=builder.step;
+  const modal=$('#modal');
+  const copy=['Choose a template','Record or upload','Review your card'][step-1];
+  let body;
+  if(step===1){
+    body=FE_TEMPLATES.map((item,index)=>`<button type="button" class="btn builder-template" onclick="chooseTemplate(${index})">${item.name}</button>`).join('')
+      + '<button type="button" class="btn ghost builder-template" onclick="chooseTemplate()">Start from scratch</button>';
+    body='<div class="hosted-actions">'+body+'</div>';
+  }else if(step===2){
+    body='<div class="card recwrap" id="recwrap"></div><input type="file" id="recfile" accept="video/mp4,video/webm" hidden onchange="fileChosen(this)">';
+  }else{
+    body=`<label class="fl" for="b_title">Card label for your callback queue</label><input id="b_title" class="in" maxlength="120" value="${escapeHtml(builder.title)}" oninput="builder.title=this.value">
+      <label class="fl" for="b_hook">Public headline</label><input id="b_hook" class="in" maxlength="120" value="${escapeHtml(builder.hook)}" oninput="builder.hook=this.value">
+      <label class="fl" for="b_script">Talking points for you</label><textarea id="b_script" class="in" maxlength="3000" oninput="builder.script=this.value">${escapeHtml(builder.script)}</textarea>
+      <p class="muted fz13">The hosted version has one action: Request a call. You’ll add the transcript before publishing.</p>`;
+  }
+  modal.innerHTML=`<div class="mh"><h3 id="builder-title">Create a Video Card</h3><button type="button" class="x" aria-label="Close" onclick="closeM()">✕</button></div>
+    <div class="mb"><p class="builder-step">Step ${step} of 3 · ${copy}</p>${body}
+      <div class="hosted-actions builder-actions">
+        ${step>1?'<button type="button" class="btn ghost" onclick="builderBack()">Back</button>':''}
+        ${step===2?'<button type="button" class="btn primary" onclick="continueBuilder()">Review card</button>':''}
+        ${step===3?'<button type="button" class="btn primary" onclick="saveCard()">Save and share</button>':''}
+      </div>
+    </div>`;
+  if(step===2){
+    if(builder.videoBlob)showRecPlayback(builder.videoBlob);
+    else drawRecIdle();
+  }
+  modal.querySelector('button')?.focus();
+}
+function chooseTemplate(index){
+  const item=FE_TEMPLATES[index];
+  if(item)Object.assign(builder,{title:item.name,hook:item.hook,script:item.script});
+  builder.step=2;
+  showBuilder();
+}
+function builderBack(){
+  if(recorder&&recorder.state!=='inactive'){toast('Stop the recording first.');return;}
+  stopCam();
+  builder.step--;
+  showBuilder();
+}
+function continueBuilder(){
+  if(!builder.videoBlob){toast('Record or upload a video first.');return;}
+  if(builder.videoBlob.size>hostedLimit){toast('Choose a video that is 3 MB or smaller.');return;}
+  stopCam();
+  builder.step=3;
+  showBuilder();
+}
+async function saveCard(){
+  const title=builder.title.trim(),hook=builder.hook.trim();
+  if(!title||!hook){toast('Add a card label and public headline.');return;}
+  const id='k'+crypto.randomUUID();
+  const card={id,title,hook,script:builder.script,template:'Custom',views:0,uniq:0,clicks:0,watchPct:0,hot:0,created:'just now',buttons:['Request a call'],color:'#1b2f6b',hasVideo:true};
+  const button=$('#modal .builder-actions .primary');
+  button.disabled=true;
+  try{
+    await VDB.put(id,builder.videoBlob);
+    S.cards.unshift(card);
+    save();
+    view='cards';
+    render();
+    openHostedCard(id);
+  }catch{
+    S.cards=S.cards.filter(item=>item.id!==id);
+    toast('The draft could not be saved on this device.');
+  }finally{button.disabled=false;}
+}
+function openShare(id){openHostedCard(id);}
 /* ============ RECIPIENT PREVIEW ============ */
 function openPreview(id){
   const c=S.cards.find(x=>x.id===id);
@@ -579,14 +576,14 @@ function openPreview(id){
   $('#modal').innerHTML=`
     <div class="mh"><h3>Recipient view</h3><button class="x" onclick="closeM()">✕</button></div>
     <div class="mb">
-      <p class="muted fz13" style="margin-top:0;text-align:center">This is exactly what your prospect sees when they tap your link.</p>
+      <p class="muted fz13" style="margin-top:0;text-align:center">This local preview uses simulated controls. Use Share card to open the hosted recipient page.</p>
       <div class="phone"><div class="screen">
         <div class="pvid" style="background:linear-gradient(135deg,${c.color||'#1b2f6b'},#0a1128)">
           <div class="play" onclick="simWatch()">▶</div>
           <div class="agent"><div class="av" style="background:#fff;color:#0b1020">${AGENT.avatar}</div><div><div class="fw7 fz12">${AGENT.name}</div><div style="font-size:10.5px;opacity:.8">${AGENT.agency}</div></div></div>
         </div>
         <div class="pbody">
-          <h3>${c.hook||c.title}</h3>
+          <h3>${escapeHtml(c.hook||c.title)}</h3>
           <div class="muted fz12">${AGENT.name} sent you a 60-second video</div>
           <div class="pbtns">
             ${btns.map((b,i)=>`<div class="pbtn ${i===0?'main':''}" onclick="simTap('${b}')">${btnIcon(b)} ${b}</div>`).join('')}
@@ -928,7 +925,7 @@ function vAnalytics(){
           ${drop.map(d=>`<div class="bar" style="height:${d.v}%;background:linear-gradient(180deg,var(--accent),#0c8f77)"><span>${d.v}%</span><small>${d.s}</small></div>`).join('')}
         </div>
         <div style="height:16px"></div>
-        <div class="muted fz12" style="margin-top:10px">💡 Most drop-off is after 50%. Your top card ("${topCard().title}") keeps ${topCard().watchPct}% watching — reuse that opener.</div>
+        <div class="muted fz12" style="margin-top:10px">💡 Most drop-off is after 50%. Your top card ("${escapeHtml(topCard().title)}") keeps ${topCard().watchPct}% watching — reuse that opener.</div>
       </div>
       <div class="card">
         <b>Best lead sources</b><div class="mut2 fz12" style="margin-bottom:12px">Share of hot leads</div>
@@ -965,6 +962,7 @@ const VDB={db:null,
     rq.onsuccess=()=>res(rq.result||null);rq.onerror=()=>rej(rq.error);});}
 };
 /* ============ VIDEO RECORDER ============ */
+let recObjectUrl=null;
 let recStream=null,recorder=null,recChunks=[],recTimer=null,recSecs=0;
 function recUI(html){const w=$('#recwrap');if(w)w.innerHTML=html;}
 function drawRecIdle(){
@@ -975,7 +973,7 @@ function drawRecIdle(){
       <button class="btn primary sm" onclick="startCam()">🎥 Record with camera</button>
       <button class="btn sm" onclick="document.getElementById('recfile').click()">📁 Upload a clip</button>
     </div>
-    <div class="muted fz12" style="margin-top:10px">MP4/MOV/WebM · under 90s recommended · videos stay on this device</div>
+    <div class="muted fz12" style="margin-top:10px">MP4 or WebM · 3 MB limit for hosted cards · your draft stays on this device</div>
   </div>`);
 }
 async function startCam(){
@@ -991,7 +989,7 @@ async function startCam(){
 }
 function startRec(){
   recChunks=[];recSecs=0;
-  try{recorder=new MediaRecorder(recStream);}
+  try{recorder=new MediaRecorder(recStream,{videoBitsPerSecond:300000,audioBitsPerSecond:48000});}
   catch(e){toast('Recording not supported in this browser','⚠️');return;}
   recorder.ondataavailable=e=>{if(e.data&&e.data.size)recChunks.push(e.data);};
   recorder.onstop=()=>{
@@ -1008,14 +1006,16 @@ function startRec(){
   const v=$('#recvid');if(v)v.srcObject=recStream;
   recTimer=setInterval(()=>{recSecs++;
     const t=$('#rectime');if(t)t.textContent='● '+Math.floor(recSecs/60)+':'+String(recSecs%60).padStart(2,'0');
-    if(recSecs>=90){toast('90s cap reached — short videos convert best','⏱');stopRec();}},1000);
+    if(recSecs>=45){toast('Recording limit reached.','⏱');stopRec();}},1000);
 }
 function stopRec(){clearInterval(recTimer);if(recorder&&recorder.state!=='inactive')recorder.stop();}
 function stopCam(){clearInterval(recTimer);
   if(recorder&&recorder.state!=='inactive'){try{recorder.stop();}catch(e){}}
   if(recStream){recStream.getTracks().forEach(t=>t.stop());recStream=null;}}
 function showRecPlayback(blob){
-  const url=URL.createObjectURL(blob);
+  if(recObjectUrl)URL.revokeObjectURL(recObjectUrl);
+  recObjectUrl=URL.createObjectURL(blob);
+  const url=recObjectUrl;
   recUI(`<video src="${url}" controls playsinline></video>
     <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
       <span class="chip on" style="flex:1;justify-content:center">✅ Video attached · ${(blob.size/1048576).toFixed(1)} MB</span>
@@ -1024,7 +1024,7 @@ function showRecPlayback(blob){
 }
 function fileChosen(inp){
   const f=inp.files[0];if(!f)return;
-  if(!f.type.startsWith('video/')){toast('Choose a video file (MP4/MOV/WebM)','⚠️');return;}
+  if(!/^(video\/(mp4|webm))$/.test(f.type)||f.size>hostedLimit){toast('Choose an MP4 or WebM video of 3 MB or less.','⚠️');return;}
   builder.videoBlob=f;showRecPlayback(f);inp.value='';
 }
 /* ============ CALLING ROUND ============ */
@@ -1243,7 +1243,7 @@ function saveSeq(){
 }
 /* ============ MODAL ============ */
 function openM(){$('#overlay').classList.add('on');}
-function closeM(){stopCam();$('#overlay').classList.remove('on');}
+function closeM(){if(recorder&&recorder.state!=='inactive')recorder.onstop=null;stopCam();if(recObjectUrl){URL.revokeObjectURL(recObjectUrl);recObjectUrl=null;}$('#overlay').classList.remove('on');}
 $('#overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeM();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeM();});
 if(!S.seededEnroll){try{bootstrapEnroll();save();}catch(e){}}

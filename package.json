@@ -1,0 +1,1 @@
+{"name":"legacytap","private":true,"type":"module","scripts":{"test":"node --test"},"engines":{"node":">=22"},"dependencies":{"@netlify/blobs":"^10.7.11"}}
